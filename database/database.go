@@ -11,7 +11,6 @@ import (
 
 // InitDB returns a database connection
 func InitDB() *gorm.DB {
-	fmt.Println(viper.GetString("db.pass"))
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s TimeZone=Europe/Dublin",
 		viper.GetString("db.host"), viper.GetString("db.user"),
 		viper.GetString("db.pass"), viper.GetString("db.name"),
