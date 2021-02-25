@@ -21,7 +21,7 @@ func FirebaseAuth(next http.Handler) http.Handler {
 		idToken := strings.TrimSpace(strings.Replace(tokenString, "Bearer", "", 1))
 		if idToken == "" {
 			// if they are not authenticated, continue without auth, but chekc in handler
-			next.ServeHTTP(w, r)
+			next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), AuthCtx, "")))
 			return
 		}
 		token, err := authentication.InspectToken(idToken)
