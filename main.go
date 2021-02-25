@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi"
 
+	"github.com/gal/tny/authentication"
 	"github.com/gal/tny/config"
 	"github.com/gal/tny/models"
 	"github.com/gal/tny/router"
@@ -16,7 +17,7 @@ func main() {
 	config.InitConfig()
 	router.Route(r)
 	models.InitModels()
-	
+	authentication.InitFirebase()
 
 	http.ListenAndServe(":8080", r)
 }
