@@ -1,0 +1,23 @@
+version: '3.7'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8888:8080"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASS=pass123
+      - DB_NAME=postgres
+    links: 
+      - db:db
+
+  db:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=pass123
+      - POSTGRES_USER=postgres
