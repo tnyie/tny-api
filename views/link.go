@@ -106,14 +106,16 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 		log.Println("malformed create query\n", err)
 		http.Error(w, http.StatusText(400), 400)
 	}
-	if r.Context().Value(middleware.AuthCtx).(string) == "" {
-		// user is not logged in --> gets random string
+
+	uid, ok := r.Context().Value(middleware.AuthCtx).(string)
+	if !ok || uid == "" || link.Slug == "" {
 		link.Slug = ""
 		chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-"
 		for i := 0; i < 6; i++ {
 			link.Slug = link.Slug + string(chars[rand.Intn(62)])
 		}
 	}
+
 	link.Lease = time.Now().Add(time.Hour * 24 * 30).Unix()
 	link.OwnerID = r.Context().Value(middleware.AuthCtx).(string)
 	err = link.Create()
