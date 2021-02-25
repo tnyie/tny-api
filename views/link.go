@@ -107,8 +107,12 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(400), 400)
 	}
 
-	uid, ok := r.Context().Value(middleware.AuthCtx).(string)
-	if !ok || uid == "" || link.Slug == "" {
+	ctx := r.Context().Value(middleware.AuthCtx)
+	var uid = ""
+	if ctx != nil {
+		uid = ctx.(string)
+	}
+	if uid == "" || link.Slug == "" {
 		link.Slug = ""
 		chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-"
 		for i := 0; i < 6; i++ {
@@ -117,7 +121,7 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	link.Lease = time.Now().Add(time.Hour * 24 * 30).Unix()
-	link.OwnerID = r.Context().Value(middleware.AuthCtx).(string)
+	link.OwnerID = uid
 	err = link.Create()
 	if err != nil {
 		http.Error(w, http.StatusText(409), 409)
