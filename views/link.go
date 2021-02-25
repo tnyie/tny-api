@@ -60,7 +60,7 @@ func GetLinkAttribute(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(403)
 		return
 	}
-	respondJSON(w, data)
+	respondJSON(w, data, http.StatusAccepted)
 }
 
 // PutLinkAttribute updates a given attribute
@@ -122,7 +122,12 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	w.WriteHeader(201)
+	encoded, err := json.Marshal(link)
+	if err != nil {
+		log.Println("Couldn't parse link as josn\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	respondJSON(w, encoded, http.StatusCreated)
 }
 
 // SearchLink returns link object from given slug
@@ -145,7 +150,7 @@ func SearchLink(w http.ResponseWriter, r *http.Request) {
 		log.Println("Couldn't encode json response")
 		return
 	}
-	respondJSON(w, encoded)
+	respondJSON(w, encoded, http.StatusAccepted)
 }
 
 func getLink(id string) (*models.Link, error) {
