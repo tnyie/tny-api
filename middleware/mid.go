@@ -8,7 +8,7 @@ import (
 	"github.com/gal/tny/authentication"
 )
 
-type authCtx interface{}
+type authCtx string
 
 // AuthCtx context key to access authentication response
 var AuthCtx authCtx
