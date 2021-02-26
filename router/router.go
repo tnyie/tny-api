@@ -13,6 +13,9 @@ import (
 // Route sets up routes
 func Route(r *chi.Mux) {
 	r.Use(mid.Logger)
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "https://tny.ie/ui", http.StatusTemporaryRedirect)
+	})
 	r.Get("/{slug}", views.GetLink)
 	r.Mount("/api", apiHandler())
 }
