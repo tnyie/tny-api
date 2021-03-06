@@ -3,8 +3,10 @@ package models
 import (
 	"gorm.io/gorm"
 
-	"github.com/gal/tny/database"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gofrs/uuid"
+
+	"github.com/gal/tny/database"
 )
 
 var db *gorm.DB
@@ -14,16 +16,24 @@ func InitModels() {
 	db = database.InitDB()
 
 	db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";") // enable uuid generation on server
-	db.AutoMigrate(&Link{}, &Visit{})
+	db.AutoMigrate(&User{}, &UserAuth{}, &Link{}, &Visit{})
 }
 
 // User structure containing non-authenticative information
 type User struct {
-	UID         string `gorm:"primaryKey" json:"uid,omitempty"`
-	DisplayName string `json:"display_name,omitempty"`
-	Email       string `json:"email,omitempty"`
-	CreatedAt   int64  `gorm:"autoCreateTime" json:"created_at,omitempty"`
-	UpdatedAt   int64  `gorm:"autoUpdateTime" json:"updated_at,omitempty"`
+	UID       string `gorm:"primaryKey" json:"uid,omitempty"`
+	Username  string `json:"display_name,omitempty"`
+	Email     string `gorm:"unique" json:"email,omitempty"`
+	CreatedAt int64  `gorm:"autoCreateTime" json:"created_at,omitempty"`
+	UpdatedAt int64  `gorm:"autoUpdateTime" json:"updated_at,omitempty"`
+}
+
+// UserAuth contains credentials stored serverside
+type UserAuth struct {
+	UID      string `gorm:"primaryKey;type:string;default:uuid_generate_v4()" json:"uid,omitempty"`
+	Username string `gorm:"unique" json:"username,omitempty"`
+	Email    string `gorm:"unique" json:"email,omitempty"`
+	Hash     string `json:"hash,omitempty"`
 }
 
 // Link structure containing slug/URL pairs
@@ -41,4 +51,9 @@ type Link struct {
 type Visit struct {
 	LinkID uuid.UUID `json:"link_id"`
 	Time   int64     `gorm:"autoCreateTime" json:"time,omitempty"`
+}
+
+type JWTClaims struct {
+	UserID string
+	jwt.StandardClaims
 }

@@ -22,7 +22,9 @@ func Route(r *chi.Mux) {
 
 func apiHandler() http.Handler {
 	r := chi.NewRouter()
-	r.Use(middleware.FirebaseAuth)
-	r.Mount("/link", linkRouter())
+	r.Use(middleware.CheckToken)
+	r.Mount("/tokens", tokenRouter())
+	r.Mount("/links", linkRouter())
+	r.Mount("/users", userRouter())
 	return r
 }

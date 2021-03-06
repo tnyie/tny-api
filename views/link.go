@@ -10,6 +10,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi"
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
@@ -25,7 +26,7 @@ func GetLink(w http.ResponseWriter, r *http.Request) {
 	err := link.Search()
 	if err != nil {
 		log.Println("Search error\n", err)
-		http.Error(w, http.StatusText(501), 501)
+		w.WriteHeader(http.StatusNotFound)
 	}
 	if link.URL != "" {
 		httpRedirect(w, r, link.URL)
@@ -39,8 +40,27 @@ func GetLink(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println("Couldnt update link\n", err)
 		}
+		return
 	}
 	w.WriteHeader(404)
+}
+
+func GetLinksByUser(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id != "" {
+		links, err := models.GetLinksByUser(id)
+		if err != nil {
+			log.Println("Error getting user links\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		encoded, err := json.Marshal(links)
+		if err != nil {
+			// TODO
+		}
+		respondJSON(w, encoded, http.StatusOK)
+		return
+	}
 }
 
 // GetLinkAttribute returns given attribute
@@ -70,11 +90,18 @@ func PutLinkAttribute(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(404)
 		return
 	}
-	// if user is not the owner, unauthorized
-	if uid := r.Context().Value(middleware.AuthCtx).(string); uid != link.OwnerID {
-		w.WriteHeader(401)
-		return
+
+	uid := ""
+
+	if claims, ok := r.Context().Value(middleware.AuthCtx{}).(jwt.MapClaims); ok {
+		if userID, ok := claims["UserID"].(string); ok {
+			uid = userID
+		}
+	} else {
+		// user not allowed to put link attributes
+		w.WriteHeader(http.StatusUnauthorized)
 	}
+
 	data := make(map[string]interface{})
 	bd, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -89,12 +116,18 @@ func PutLinkAttribute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch path.Base(r.URL.Path) {
-	case "slug":
-		link.Put("slug", data["data"])
 	case "url":
-		link.Put("url", data["data"])
+		err = link.Put(uid, "url", data["url"])
 	}
-
+	if err != nil {
+		log.Println(err)
+	}
+	encoded, err := json.Marshal(link)
+	if err != nil {
+		log.Println("Error updating link")
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	respondJSON(w, encoded, http.StatusOK)
 }
 
 // CreateLink creates a new link
@@ -104,24 +137,28 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(bd, &link)
 	if err != nil {
 		log.Println("malformed create query\n", err)
-		http.Error(w, http.StatusText(400), 400)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 
-	ctx := r.Context().Value(middleware.AuthCtx)
-	var uid = ""
-	if ctx != nil {
-		uid = ctx.(string)
+	if claims, ok := r.Context().Value(middleware.AuthCtx{}).(jwt.MapClaims); ok {
+		if userID, ok := claims["UserID"].(string); ok {
+			log.Println(claims)
+			link.OwnerID = userID
+		} else {
+			link.OwnerID = ""
+		}
 	}
-	if uid == "" || link.Slug == "" {
+
+	if link.OwnerID == "" || link.Slug == "" {
 		link.Slug = ""
 		chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-"
 		for i := 0; i < 6; i++ {
 			link.Slug = link.Slug + string(chars[rand.Intn(62)])
+			log.Println(link.Slug)
 		}
 	}
 
 	link.Lease = time.Now().Add(time.Hour * 24 * 30).Unix()
-	link.OwnerID = uid
 	err = link.Create()
 	if err != nil {
 		http.Error(w, http.StatusText(409), 409)
@@ -130,9 +167,10 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 	}
 	encoded, err := json.Marshal(link)
 	if err != nil {
-		log.Println("Couldn't parse link as josn\n", err)
+		log.Println("Couldn't parse link as json\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+	log.Println(string(encoded))
 	respondJSON(w, encoded, http.StatusCreated)
 }
 

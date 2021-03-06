@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -9,9 +10,22 @@ func (link *Link) Get() error {
 	return db.First(link).Error
 }
 
+func GetLinksByUser(id string) (*[]Link, error) {
+	var links []Link
+	err := db.Where("owner_id = ?", id).Find(&links).Error
+	log.Println(links)
+	return &links, err
+}
+
 // Put updates a link object
-func (link *Link) Put(field string, value interface{}) {
-	db.First(&link).Update(field, value)
+func (link *Link) Put(uid string, field string, value interface{}) error {
+	db.First(link)
+	if link.OwnerID != uid {
+		log.Println("owner: ", link.OwnerID, "user: ", uid)
+		return fmt.Errorf("User doesn't own resource")
+	}
+	log.Println("Updating link")
+	return db.First(link).Update(field, value).Error
 }
 
 // Create a db entry

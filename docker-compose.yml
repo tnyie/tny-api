@@ -3,9 +3,12 @@ version: '3.7'
 services:
   api:
     build: .
+    # volumes:
+    #   - ./firebase:/config
     ports:
       - "8888:8080"
     environment:
+      - TN_AUTH_KEY=dudebro
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=postgres
