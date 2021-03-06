@@ -29,6 +29,7 @@ func CheckToken(next http.Handler) http.Handler {
 			if err != nil {
 				log.Println("Error parsing token")
 				next.ServeHTTP(w, r)
+				return
 			}
 
 			log.Println(token.Valid)

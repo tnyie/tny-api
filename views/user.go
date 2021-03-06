@@ -76,5 +76,10 @@ func PostUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = user.Create()
-
+	if err != nil {
+		log.Println("Error creating user\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
 }
