@@ -4,7 +4,6 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/gofrs/uuid"
 
 	"github.com/gal/tny/database"
 )
@@ -38,19 +37,19 @@ type UserAuth struct {
 
 // Link structure containing slug/URL pairs
 type Link struct {
-	ID          uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"id,omitempty"`
-	OwnerID     string    `json:"owner_id"`
-	Slug        string    `gorm:"unique" json:"slug,omitempty"`
-	URL         string    `json:"url,omitempty"`
-	DateCreated int64     `gorm:"autoCreateTime" json:"created_at,omitempty"`
-	UpdatedAt   int64     `gorm:"autoUpdateTime" json:"updated_at,omitempty"`
-	Lease       int64     `json:"lease,omitempty"`
+	ID          string `gorm:"primaryKey;type:string;default:uuid_generate_v4()" json:"id,omitempty"`
+	OwnerID     string `json:"owner_id"`
+	Slug        string `gorm:"unique" json:"slug,omitempty"`
+	URL         string `json:"url,omitempty"`
+	DateCreated int64  `gorm:"autoCreateTime" json:"created_at,omitempty"`
+	UpdatedAt   int64  `gorm:"autoUpdateTime" json:"updated_at,omitempty"`
+	Lease       int64  `json:"lease,omitempty"`
 }
 
 // Visit structure containing time of visitation
 type Visit struct {
-	LinkID uuid.UUID `json:"link_id"`
-	Time   int64     `gorm:"autoCreateTime" json:"time,omitempty"`
+	LinkID string `json:"link_id"`
+	Time   int64  `gorm:"autoCreateTime" json:"time,omitempty"`
 }
 
 type JWTClaims struct {
