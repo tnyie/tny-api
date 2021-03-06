@@ -21,6 +21,7 @@ func GetLinksByUser(id string) (*[]Link, error) {
 func (link *Link) Put(uid string, field string, value interface{}) error {
 	db.First(link)
 	if link.OwnerID != uid {
+		log.Println("owner: ", link.OwnerID, "user: ", uid)
 		return fmt.Errorf("User doesn't own resource")
 	}
 	log.Println("Updating link")
@@ -49,10 +50,6 @@ func (link *Link) Update() error {
 }
 
 // Delete a db entry2
-func (link *Link) Delete(uid string) error {
-	db.First(link)
-	if link.OwnerID != uid {
-		return fmt.Errorf("User doesn't own resource")
-	}
+func (link *Link) Delete() error {
 	return db.Delete(link).Error
 }
