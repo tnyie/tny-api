@@ -12,7 +12,6 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi"
-	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 
 	"github.com/gal/tny/middleware"
@@ -174,6 +173,22 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, encoded, http.StatusCreated)
 }
 
+func DeleteLink(w http.ResponseWriter, r *http.Request) {
+	link := &models.Link{ID: chi.URLParam(r, "id")}
+	uid := ""
+	if claims, ok := r.Context().Value(middleware.AuthCtx{}).(jwt.MapClaims); ok {
+		uid = claims["UserID"].(string)
+	}
+
+	err := link.Delete(uid)
+	if err != nil {
+		log.Println("error deleting link\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+}
+
 // SearchLink returns link object from given slug
 func SearchLink(w http.ResponseWriter, r *http.Request) {
 	var link *models.Link
@@ -198,7 +213,7 @@ func SearchLink(w http.ResponseWriter, r *http.Request) {
 }
 
 func getLink(id string) (*models.Link, error) {
-	link := &models.Link{ID: uuid.FromStringOrNil(id)}
+	link := &models.Link{ID: id}
 	if err := link.Get(); err != nil {
 		log.Println("error getting link\n", err)
 		return nil, err
