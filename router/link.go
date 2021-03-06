@@ -15,6 +15,7 @@ func linkRouter() http.Handler {
 	// r.Get("/{id}/{attr}", views.GetLinkAttribute)
 	r.Put("/{id}/{attr}", views.PutLinkAttribute)
 	r.Post("/", views.CreateLink)
+	r.Delete("/{id}", views.DeleteLink)
 
 	r.Get("/search/{query}", views.SearchLink)
 	return r
