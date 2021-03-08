@@ -21,6 +21,6 @@ FROM alpine
 
 WORKDIR /bin
 
-COPY --from=dev /go/bin/tny ./tny
+COPY --from=dev /go/bin/tny-api ./tny-api
 
-CMD ["sh", "-c", "tny", "-p"]
+CMD ["sh", "-c", "tny-api", "-p"]
