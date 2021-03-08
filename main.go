@@ -5,9 +5,9 @@ import (
 
 	"github.com/go-chi/chi"
 
-	"github.com/gal/tny/config"
-	"github.com/gal/tny/models"
-	"github.com/gal/tny/router"
+	"github.com/tnyie/tny-api/config"
+	"github.com/tnyie/tny-api/models"
+	"github.com/tnyie/tny-api/router"
 
 	"github.com/rs/cors"
 )

@@ -5,7 +5,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 
-	"github.com/gal/tny/database"
+	"github.com/tnyie/tny-api/database"
 )
 
 var db *gorm.DB

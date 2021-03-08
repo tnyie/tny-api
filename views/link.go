@@ -14,8 +14,8 @@ import (
 	"github.com/go-chi/chi"
 	"gorm.io/gorm"
 
-	"github.com/gal/tny/middleware"
-	"github.com/gal/tny/models"
+	"github.com/tnyie/tny-api/middleware"
+	"github.com/tnyie/tny-api/models"
 )
 
 // GetLink returns a link object

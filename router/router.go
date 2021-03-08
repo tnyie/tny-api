@@ -6,8 +6,8 @@ import (
 	"github.com/go-chi/chi"
 	mid "github.com/go-chi/chi/middleware"
 
-	"github.com/gal/tny/middleware"
-	"github.com/gal/tny/views"
+	"github.com/tnyie/tny-api/middleware"
+	"github.com/tnyie/tny-api/views"
 )
 
 // Route sets up routes

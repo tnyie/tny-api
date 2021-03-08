@@ -3,7 +3,7 @@ package router
 import (
 	"net/http"
 
-	"github.com/gal/tny/views"
+	"github.com/tnyie/tny-api/views"
 	"github.com/go-chi/chi"
 )
 

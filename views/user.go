@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/gal/tny/middleware"
-	"github.com/gal/tny/models"
+	"github.com/tnyie/tny-api/middleware"
+	"github.com/tnyie/tny-api/models"
 	"github.com/go-chi/chi"
 )
 

@@ -13,7 +13,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go install github.com/gal/tny
+RUN go install github.com/tnyie/tny-api
 
 CMD ["go", "run", "*.go"]
 
