@@ -52,7 +52,14 @@ type Visit struct {
 	Time   int64  `gorm:"autoCreateTime" json:"time,omitempty"`
 }
 
+// JWTClaims claims of the jwt
 type JWTClaims struct {
 	UserID string
+	jwt.StandardClaims
+}
+
+// EmailVerification jwt claims to be used to verify an email
+type EmailVerification struct {
+	Key string
 	jwt.StandardClaims
 }

@@ -5,12 +5,25 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/go-chi/chi"
+	"github.com/spf13/viper"
+
+	"github.com/tnyie/tny-api/mail"
 	"github.com/tnyie/tny-api/middleware"
 	"github.com/tnyie/tny-api/models"
-	"github.com/go-chi/chi"
 )
+
+const emailVerificationHeader = "Verification needed for Tny.ie"
+const emailVerificationParagraph = `Welcome to Tny.ie!
+Click the button below verify your email address.
+<div style="display:flex;align-items:center;justify-content:center">
+<a style="padding: 1em 2em; background-color: #009688; text-decoration: none; color: white; border-radius: 6%%;" href=" %s ">Verify Email</a>
+</div>
+If you did not make an account on https://tny.ie , please ignore this email.
+`
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	uid := ""
@@ -82,4 +95,30 @@ func PostUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
+
+	expirationTime := time.Now().Add(time.Hour).Unix()
+	claims := &models.EmailVerification{
+		Key: user.Email,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime,
+			IssuedAt:  time.Now().Unix(),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(
+		viper.GetString("tny.auth.key"),
+	))
+	if err != nil {
+		log.Println("Couldn't create token for email verification")
+		return
+	}
+
+	response, err := mail.SendMail(userAuth, "Email Verification for TnyIE", tokenString)
+	if err != nil {
+		log.Println("Error sending email to ", userAuth.Email)
+		log.Println(err)
+		return
+	}
+	log.Println("Sent email verification to ", userAuth.Username, " with response: ", response)
 }
