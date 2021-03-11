@@ -10,6 +10,7 @@ func (link *Link) Get() error {
 	return db.First(link).Error
 }
 
+// GetLinksByUser eturns each link owned by given user id
 func GetLinksByUser(id string) (*[]Link, error) {
 	var links []Link
 	err := db.Where("owner_id = ?", id).Find(&links).Error

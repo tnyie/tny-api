@@ -6,6 +6,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// HashPassword returns a hashed version of given password
 func HashPassword(password []byte) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
 	if err != nil {
@@ -34,4 +35,9 @@ func (user *UserAuth) Create(password string) error {
 		return err
 	}
 	return db.Create(user).Error
+}
+
+// Verify sets 'enabled' field to true
+func (user *UserAuth) Verify() error {
+	return db.First(&user).Update("enabled", true).Error
 }

@@ -25,6 +25,7 @@ Click the button below verify your email address.
 If you did not make an account on https://tny.ie , please ignore this email.
 `
 
+// GetUser gets user data
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	uid := ""
 	if claims, ok := r.Context().Value(middleware.AuthCtx{}).(jwt.MapClaims); ok {
@@ -53,6 +54,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, encoded, http.StatusOK)
 }
 
+// PostUser creates a user
 func PostUser(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]string)
 
@@ -98,7 +100,7 @@ func PostUser(w http.ResponseWriter, r *http.Request) {
 
 	expirationTime := time.Now().Add(time.Hour).Unix()
 	claims := &models.EmailVerification{
-		Key: user.Email,
+		Email: user.Email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime,
 			IssuedAt:  time.Now().Unix(),

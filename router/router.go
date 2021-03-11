@@ -24,6 +24,7 @@ func apiHandler() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.CheckToken)
 	r.Mount("/tokens", tokenRouter())
+	r.Mount("/verify", verificationRouter())
 	r.Mount("/links", linkRouter())
 	r.Mount("/users", userRouter())
 	return r

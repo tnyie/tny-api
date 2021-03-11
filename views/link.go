@@ -44,22 +44,36 @@ func GetLink(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(404)
 }
 
+// GetLinksByUser checks for authorized user and returns all links owned by user
 func GetLinksByUser(w http.ResponseWriter, r *http.Request) {
+
+	uid := ""
+	if claims, ok := r.Context().Value(middleware.AuthCtx{}).(jwt.MapClaims); ok {
+		uid = claims["UserID"].(string)
+	}
+
 	id := chi.URLParam(r, "id")
-	if id != "" {
-		links, err := models.GetLinksByUser(id)
-		if err != nil {
-			log.Println("Error getting user links\n", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		encoded, err := json.Marshal(links)
-		if err != nil {
-			// TODO
-		}
-		respondJSON(w, encoded, http.StatusOK)
+
+	if uid == "" || uid != id {
+		log.Println("User unauthorized to access resource")
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+
+	links, err := models.GetLinksByUser(id)
+	if err != nil {
+		log.Println("Error getting user links\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	encoded, err := json.Marshal(links)
+	if err != nil {
+		log.Println("Error marshalling data\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	respondJSON(w, encoded, http.StatusOK)
+	return
 }
 
 // GetLinkAttribute returns given attribute
@@ -173,6 +187,7 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, encoded, http.StatusCreated)
 }
 
+// DeleteLink deletes a given link
 func DeleteLink(w http.ResponseWriter, r *http.Request) {
 	link := &models.Link{ID: chi.URLParam(r, "id")}
 	uid := ""

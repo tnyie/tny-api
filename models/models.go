@@ -22,7 +22,7 @@ func InitModels() {
 type User struct {
 	UID       string `gorm:"primaryKey" json:"uid,omitempty"`
 	Username  string `json:"display_name,omitempty"`
-	Email     string `json:"email,omitempty"`
+	Email     string `gorm:"unique" json:"email,omitempty"`
 	CreatedAt int64  `gorm:"autoCreateTime" json:"created_at,omitempty"`
 	UpdatedAt int64  `gorm:"autoUpdateTime" json:"updated_at,omitempty"`
 }
@@ -31,8 +31,9 @@ type User struct {
 type UserAuth struct {
 	UID      string `gorm:"primaryKey;type:string;default:uuid_generate_v4()" json:"uid,omitempty"`
 	Username string `gorm:"unique" json:"username,omitempty"`
-	Email    string `json:"email,omitempty"`
+	Email    string `gorm:"unique" json:"email,omitempty"`
 	Hash     string `json:"hash,omitempty"`
+	Enabled  bool   `json:"enabled"`
 }
 
 // Link structure containing slug/URL pairs
@@ -60,6 +61,6 @@ type JWTClaims struct {
 
 // EmailVerification jwt claims to be used to verify an email
 type EmailVerification struct {
-	Key string
+	Email string
 	jwt.StandardClaims
 }

@@ -2,7 +2,6 @@ package mail
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/sendgrid/rest"
 	"github.com/sendgrid/sendgrid-go"
@@ -25,7 +24,6 @@ func SendMail(user *models.UserAuth, subject, link string) (*rest.Response, erro
 	client := sendgrid.NewSendClient(viper.GetString("SENDGRID_CREDENTIAL"))
 
 	response, err := client.Send(message)
-	log.Println(string(client.Request.Body))
 	return response, err
 }
 

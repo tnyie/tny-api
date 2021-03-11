@@ -8,17 +8,20 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/spf13/viper"
 	"github.com/tnyie/tny-api/middleware"
 	"github.com/tnyie/tny-api/models"
-	"github.com/spf13/viper"
 )
 
+// CreateToken creates an API token
 func CreateToken(w http.ResponseWriter, r *http.Request) {
 	jsonMap := make(map[string]string)
 
 	bd, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		// TOOD
+		log.Println("Error reading request body\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	err = json.Unmarshal(bd, &jsonMap)
 
