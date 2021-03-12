@@ -16,6 +16,7 @@ import (
 
 	"github.com/tnyie/tny-api/middleware"
 	"github.com/tnyie/tny-api/models"
+	"github.com/tnyie/tny-api/util"
 )
 
 // GetLink returns a link object
@@ -47,14 +48,11 @@ func GetLink(w http.ResponseWriter, r *http.Request) {
 // GetLinksByUser checks for authorized user and returns all links owned by user
 func GetLinksByUser(w http.ResponseWriter, r *http.Request) {
 
-	uid := ""
-	if claims, ok := r.Context().Value(middleware.AuthCtx{}).(jwt.MapClaims); ok {
-		uid = claims["UserID"].(string)
-	}
-
 	id := chi.URLParam(r, "id")
 
-	if uid == "" || uid != id {
+	authorized := util.CheckLogin(r, id)
+
+	if !authorized {
 		log.Println("User unauthorized to access resource")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -76,43 +74,43 @@ func GetLinksByUser(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// GetLinkAttribute returns given attribute
-func GetLinkAttribute(w http.ResponseWriter, r *http.Request) {
-	response := make(map[string]interface{})
-	link, err := getLink(chi.URLParam(r, "id"))
-	if err != nil {
-		w.WriteHeader(404)
-	}
-	var data []byte
-	switch chi.URLParam(r, "attr") {
-	case "slug":
-		response["data"] = link.Slug
-	case "url":
-		response["data"] = link.URL
-	default:
-		w.WriteHeader(403)
-		return
-	}
-	respondJSON(w, data, http.StatusAccepted)
-}
+// // GetLinkAttribute returns given attribute
+// func GetLinkAttribute(w http.ResponseWriter, r *http.Request) {
+// 	response := make(map[string]interface{})
+// 	link, err := getLink(chi.URLParam(r, "id"))
+// 	if err != nil {
+// 		w.WriteHeader(404)
+// 	}
+// 	var data []byte
+// 	switch chi.URLParam(r, "attr") {
+// 	case "slug":
+// 		response["data"] = link.Slug
+// 	case "url":
+// 		response["data"] = link.URL
+// 	default:
+// 		w.WriteHeader(403)
+// 		return
+// 	}
+// 	respondJSON(w, data, http.StatusAccepted)
+// }
 
 // PutLinkAttribute updates a given attribute
 func PutLinkAttribute(w http.ResponseWriter, r *http.Request) {
-	link, err := getLink(chi.URLParam(r, "id"))
-	if err != nil {
-		w.WriteHeader(404)
+
+	id := chi.URLParam(r, "id")
+
+	authorized := util.CheckLogin(r, id)
+
+	if !authorized {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	uid := ""
+	link, err := getLink(chi.URLParam(r, "id"))
 
-	if claims, ok := r.Context().Value(middleware.AuthCtx{}).(jwt.MapClaims); ok {
-		if userID, ok := claims["UserID"].(string); ok {
-			uid = userID
-		}
-	} else {
-		// user not allowed to put link attributes
-		w.WriteHeader(http.StatusUnauthorized)
+	if err != nil {
+		w.WriteHeader(404)
+		return
 	}
 
 	data := make(map[string]interface{})
@@ -130,7 +128,7 @@ func PutLinkAttribute(w http.ResponseWriter, r *http.Request) {
 
 	switch path.Base(r.URL.Path) {
 	case "url":
-		err = link.Put(uid, "url", data["url"])
+		err = link.Put(id, "url", data["url"])
 	}
 	if err != nil {
 		log.Println(err)
@@ -190,12 +188,14 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 // DeleteLink deletes a given link
 func DeleteLink(w http.ResponseWriter, r *http.Request) {
 	link := &models.Link{ID: chi.URLParam(r, "id")}
-	uid := ""
-	if claims, ok := r.Context().Value(middleware.AuthCtx{}).(jwt.MapClaims); ok {
-		uid = claims["UserID"].(string)
+
+	authorized := util.CheckLogin(r, link.OwnerID)
+
+	if !authorized || link.OwnerID == "" {
+		w.WriteHeader(http.StatusUnauthorized)
 	}
 
-	err := link.Delete(uid)
+	err := link.Delete(link.ID)
 	if err != nil {
 		log.Println("error deleting link\n", err)
 		w.WriteHeader(http.StatusBadRequest)

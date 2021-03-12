@@ -12,8 +12,8 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tnyie/tny-api/mail"
-	"github.com/tnyie/tny-api/middleware"
 	"github.com/tnyie/tny-api/models"
+	"github.com/tnyie/tny-api/util"
 )
 
 const emailVerificationHeader = "Verification needed for Tny.ie"
@@ -27,13 +27,11 @@ If you did not make an account on https://tny.ie , please ignore this email.
 
 // GetUser gets user data
 func GetUser(w http.ResponseWriter, r *http.Request) {
-	uid := ""
-	if claims, ok := r.Context().Value(middleware.AuthCtx{}).(jwt.MapClaims); ok {
-		uid = claims["UserID"].(string)
-	}
 
-	if uid == "" || uid != chi.URLParam(r, "id") {
-		log.Println("User unauthorized to access resource")
+	uid := chi.URLParam(r, "id")
+
+	authorized := util.CheckLogin(r, uid)
+	if !authorized {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
