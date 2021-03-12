@@ -41,3 +41,8 @@ func (user *UserAuth) Create(password string) error {
 func (user *UserAuth) Verify() error {
 	return db.First(&user).Update("enabled", true).Error
 }
+
+// Get userAuth data
+func (user *UserAuth) Get() error {
+	return db.First(user).Error
+}
