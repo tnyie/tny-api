@@ -9,16 +9,16 @@ import (
 )
 
 // CheckLogin checks a request for authentication context, and compares the uid with the required one
-func CheckLogin(r *http.Request, requiredID string) bool {
+func CheckLogin(r *http.Request, requiredID string) (*models.UserAuth, bool) {
 	if claims, ok := r.Context().Value(middleware.AuthCtx{}).(jwt.MapClaims); ok {
 		if claims["UserID"] == requiredID {
 			// check if user is enabled
 			user := &models.UserAuth{UID: claims["UserID"].(string)}
 			user.Get()
 			if user.Enabled == true {
-				return true
+				return user, true
 			}
 		}
 	}
-	return false
+	return nil, false
 }
