@@ -14,7 +14,7 @@ services:
       - DB_USER=postgres
       - DB_PASS=pass123
       - DB_NAME=postgres
-      - SENDGRID_CREDENTIAL=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
+      - SENDGRID_CREDENTIAL=$SENDGRID_CREDENTIAL
     links: 
       - db:db
 
