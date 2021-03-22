@@ -1,6 +1,7 @@
 package util
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
@@ -15,8 +16,11 @@ func CheckLogin(r *http.Request, requiredID string) (*models.UserAuth, bool) {
 			// check if user is enabled
 			user := &models.UserAuth{UID: claims["UserID"].(string)}
 			user.Get()
-			if user.Enabled == true {
+			if user.Enabled && user.UID != "" {
 				return user, true
+			}
+			if !user.Enabled {
+				log.Println("User not enabled")
 			}
 		}
 	}

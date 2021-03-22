@@ -23,19 +23,20 @@ import (
 func GetLink(w http.ResponseWriter, r *http.Request) {
 	var link models.Link
 	link.Slug = chi.URLParam(r, "slug")
-	err := link.Search()
+	err := link.Get()
 	if err != nil {
 		log.Println("Search error\n", err)
 		w.WriteHeader(http.StatusNotFound)
 	}
 	if link.URL != "" {
 		httpRedirect(w, r, link.URL)
-		visit := *&models.Visit{LinkID: link.ID, Time: time.Now().UTC().Unix()}
+		visit := &models.Visit{LinkID: link.ID}
 		err := visit.Create()
 		if err != nil {
 			log.Println("Couldn't create visit obj\n", err)
 			return
 		}
+		link.Visits += 1
 		err = link.Update()
 		if err != nil {
 			log.Println("Couldnt update link\n", err)
@@ -50,7 +51,7 @@ func GetLinksByUser(w http.ResponseWriter, r *http.Request) {
 
 	id := chi.URLParam(r, "id")
 
-	authorized := util.CheckLogin(r, id)
+	_, authorized := util.CheckLogin(r, id)
 
 	if !authorized {
 		log.Println("User unauthorized to access resource")
@@ -99,7 +100,7 @@ func PutLinkAttribute(w http.ResponseWriter, r *http.Request) {
 
 	id := chi.URLParam(r, "id")
 
-	authorized := util.CheckLogin(r, id)
+	_, authorized := util.CheckLogin(r, id)
 
 	if !authorized {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -188,14 +189,17 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 // DeleteLink deletes a given link
 func DeleteLink(w http.ResponseWriter, r *http.Request) {
 	link := &models.Link{ID: chi.URLParam(r, "id")}
+	link.Get()
 
-	authorized := util.CheckLogin(r, link.OwnerID)
+	userAuth, authorized := util.CheckLogin(r, link.OwnerID)
 
-	if !authorized || link.OwnerID == "" {
+	if !authorized || link.OwnerID == "" || link.OwnerID != userAuth.UID {
+		log.Println("Link's Owner ID : ", link.OwnerID)
+		log.Println("User's ID ", userAuth.UID)
 		w.WriteHeader(http.StatusUnauthorized)
 	}
 
-	err := link.Delete(link.ID)
+	err := link.Delete()
 	if err != nil {
 		log.Println("error deleting link\n", err)
 		w.WriteHeader(http.StatusBadRequest)

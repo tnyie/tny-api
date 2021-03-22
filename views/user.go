@@ -30,7 +30,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 	uid := chi.URLParam(r, "id")
 
-	authorized := util.CheckLogin(r, uid)
+	_, authorized := util.CheckLogin(r, uid)
 	if !authorized {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -114,11 +114,19 @@ func PostUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := mail.SendMail(userAuth, "Email Verification for TnyIE", tokenString)
+	err = mail.SendMail(userAuth, tokenString)
 	if err != nil {
 		log.Println("Error sending email to ", userAuth.Email)
 		log.Println(err)
 		return
 	}
-	log.Println("Sent email verification to ", userAuth.Username, " with response: ", response)
+	log.Println("Sent email verification to ", userAuth.Username)
 }
+
+// // ResetPassword sends email with a link
+// func ResetPassword(w http.ResponseWriter, r *http.Request) {
+// 	userAuth, authorized := util.CheckLogin(r, chi.URLParam(r, "id"))
+// 	if authorized && userAuth != nil {
+
+// 	}
+// }

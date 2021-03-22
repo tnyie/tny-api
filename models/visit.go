@@ -5,9 +5,14 @@ func (visit *Visit) Create() error {
 	return db.Create(visit).Error
 }
 
-// Read a db entry by ID
-func (visit *Visit) Read() error {
-	return db.First(visit).Error
+func GetVisits(link_id, start_time string) *[]VisitsPerDay {
+	output := &[]VisitsPerDay{}
+	db.Raw(`SELECT count(*), date(created_at) FROM visits
+		WHERE link_id = ?
+		AND
+		date(created_at) > ?
+		GROUP BY date(created_at);`, link_id, start_time).Scan(&output)
+	return output
 }
 
 // Update a db entry by ID

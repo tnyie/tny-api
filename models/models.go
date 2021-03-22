@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 
 	"github.com/dgrijalva/jwt-go"
@@ -42,6 +44,7 @@ type Link struct {
 	OwnerID     string `json:"owner_id"`
 	Slug        string `gorm:"unique" json:"slug,omitempty"`
 	URL         string `json:"url,omitempty"`
+	Visits      int    `json:"visits"`
 	DateCreated int64  `gorm:"autoCreateTime" json:"created_at,omitempty"`
 	UpdatedAt   int64  `gorm:"autoUpdateTime" json:"updated_at,omitempty"`
 	Lease       int64  `json:"lease,omitempty"`
@@ -49,8 +52,13 @@ type Link struct {
 
 // Visit structure containing time of visitation
 type Visit struct {
-	LinkID string `json:"link_id"`
-	Time   int64  `gorm:"autoCreateTime" json:"time,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	LinkID    string    `json:"link_id"`
+}
+
+type VisitsPerDay struct {
+	Count int    `json:"count"`
+	Date  string `json:"date"`
 }
 
 // JWTClaims claims of the jwt
@@ -62,5 +70,11 @@ type JWTClaims struct {
 // EmailVerification jwt claims to be used to verify an email
 type EmailVerification struct {
 	Email string
+	jwt.StandardClaims
+}
+
+// PasswordResetToken contains whole user field and standard claims
+type PasswordResetToken struct {
+	User
 	jwt.StandardClaims
 }
