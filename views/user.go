@@ -16,15 +16,6 @@ import (
 	"github.com/tnyie/tny-api/util"
 )
 
-const emailVerificationHeader = "Verification needed for Tny.ie"
-const emailVerificationParagraph = `Welcome to Tny.ie!
-Click the button below verify your email address.
-<div style="display:flex;align-items:center;justify-content:center">
-<a style="padding: 1em 2em; background-color: #009688; text-decoration: none; color: white; border-radius: 6%%;" href=" %s ">Verify Email</a>
-</div>
-If you did not make an account on https://tny.ie , please ignore this email.
-`
-
 // GetUser gets user data
 func GetUser(w http.ResponseWriter, r *http.Request) {
 

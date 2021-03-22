@@ -28,27 +28,33 @@ func GetLink(w http.ResponseWriter, r *http.Request) {
 		log.Println("Search error\n", err)
 		w.WriteHeader(http.StatusNotFound)
 	}
+
+	curr_time := time.Now().Unix()
+
 	if link.URL != "" {
-		httpRedirect(w, r, link.URL)
-		visit := &models.Visit{LinkID: link.ID}
-		err := visit.Create()
-		if err != nil {
-			log.Println("Couldn't create visit obj\n", err)
-			return
+		if link.Lease > curr_time {
+			if link.UnlockTime != 0 || link.UnlockTime <= curr_time {
+				http.Redirect(w, r, link.URL, http.StatusTemporaryRedirect)
+				visit := &models.Visit{LinkID: link.ID}
+				err := visit.Create()
+				if err != nil {
+					log.Println("Couldn't create visit obj\n", err)
+					return
+				}
+				link.Visits += 1
+				err = link.Update()
+				if err != nil {
+					log.Println("Couldnt update link\n", err)
+				}
+				return
+			}
 		}
-		link.Visits += 1
-		err = link.Update()
-		if err != nil {
-			log.Println("Couldnt update link\n", err)
-		}
-		return
 	}
 	w.WriteHeader(404)
 }
 
 // GetLinksByUser checks for authorized user and returns all links owned by user
 func GetLinksByUser(w http.ResponseWriter, r *http.Request) {
-
 	id := chi.URLParam(r, "id")
 
 	_, authorized := util.CheckLogin(r, id)
@@ -72,32 +78,10 @@ func GetLinksByUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, encoded, http.StatusOK)
-	return
 }
-
-// // GetLinkAttribute returns given attribute
-// func GetLinkAttribute(w http.ResponseWriter, r *http.Request) {
-// 	response := make(map[string]interface{})
-// 	link, err := getLink(chi.URLParam(r, "id"))
-// 	if err != nil {
-// 		w.WriteHeader(404)
-// 	}
-// 	var data []byte
-// 	switch chi.URLParam(r, "attr") {
-// 	case "slug":
-// 		response["data"] = link.Slug
-// 	case "url":
-// 		response["data"] = link.URL
-// 	default:
-// 		w.WriteHeader(403)
-// 		return
-// 	}
-// 	respondJSON(w, data, http.StatusAccepted)
-// }
 
 // PutLinkAttribute updates a given attribute
 func PutLinkAttribute(w http.ResponseWriter, r *http.Request) {
-
 	id := chi.URLParam(r, "id")
 
 	_, authorized := util.CheckLogin(r, id)
@@ -146,6 +130,9 @@ func PutLinkAttribute(w http.ResponseWriter, r *http.Request) {
 func CreateLink(w http.ResponseWriter, r *http.Request) {
 	var link models.Link
 	bd, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Println("Couldn't read json body when creating link\n", err)
+	}
 	err = json.Unmarshal(bd, &link)
 	if err != nil {
 		log.Println("malformed create query\n", err)
@@ -173,7 +160,7 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 	link.Lease = time.Now().Add(time.Hour * 24 * 30).Unix()
 	err = link.Create()
 	if err != nil {
-		http.Error(w, http.StatusText(409), 409)
+		http.Error(w, http.StatusText(http.StatusConflict), http.StatusConflict)
 		log.Println(err)
 		return
 	}
@@ -238,8 +225,4 @@ func getLink(id string) (*models.Link, error) {
 		return nil, err
 	}
 	return link, nil
-}
-
-func httpRedirect(w http.ResponseWriter, r *http.Request, url string) {
-	http.Redirect(w, r, url, 302)
 }
