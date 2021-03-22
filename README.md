@@ -1,5 +1,7 @@
 # [Tny](https://tny.ie)
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/tnyie/tny-api.svg)](https://pkg.go.dev/github.com/tnyie/tny-api)
+
 A link shortener with some extra kick
 
 # Usage
