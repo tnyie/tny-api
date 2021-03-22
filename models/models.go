@@ -44,7 +44,7 @@ type Link struct {
 	OwnerID     string `json:"owner_id"`
 	Slug        string `gorm:"unique" json:"slug,omitempty"`
 	URL         string `json:"url,omitempty"`
-	UnlockTime  int64	`json:"unlocktime"`
+	UnlockTime  int64  `json:"unlocktime"`
 	Visits      int    `json:"visits"`
 	DateCreated int64  `gorm:"autoCreateTime" json:"created_at,omitempty"`
 	UpdatedAt   int64  `gorm:"autoUpdateTime" json:"updated_at,omitempty"`
