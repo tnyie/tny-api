@@ -27,5 +27,6 @@ func apiHandler() http.Handler {
 	r.Mount("/verify", verificationRouter())
 	r.Mount("/links", linkRouter())
 	r.Mount("/users", userRouter())
+	r.Mount("/visits", visitRouter())
 	return r
 }

@@ -24,7 +24,9 @@ func CreateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = json.Unmarshal(bd, &jsonMap)
-
+	if err != nil {
+		log.Println("Couldn't unmarshall json body")
+	}
 	userAuth := &models.UserAuth{
 		Email:    jsonMap["email"],
 		Username: jsonMap["username"],

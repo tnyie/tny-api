@@ -1,27 +1,40 @@
 version: '3.7'
 
 services:
+
   api:
     build: .
-    # volumes:
-    #   - ./firebase:/config
+    container_name: tny-api
     ports:
       - "8888:8080"
     environment:
-      - TN_AUTH_KEY=dudebro
+      - TNY_AUTH_KEY=dudebro
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_PASS=pass123
       - DB_NAME=postgres
-      - SENDGRID_CREDENTIAL=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
-    links: 
-      - db:db
+      - DEBUG=true
+      - SENDGRID_CREDENTIAL=${SENDGRID_CREDENTIAL}
+    networks: 
+      backend:
 
   db:
     image: postgres
+    container_name: tny-db
     ports:
       - "5432:5432"
     environment:
       - POSTGRES_PASSWORD=pass123
       - POSTGRES_USER=postgres
+    networks:
+      backend:
+
+  adminer:
+    image: adminer
+    ports:
+      - "8989:8080"
+    networks:
+      backend:
+networks:
+  backend:

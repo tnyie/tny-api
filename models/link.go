@@ -50,10 +50,7 @@ func (link *Link) Update() error {
 }
 
 // Delete a db entry2
-func (link *Link) Delete(uid string) error {
+func (link *Link) Delete() error {
 	db.First(link)
-	if link.OwnerID != uid {
-		return fmt.Errorf("User doesn't own resource")
-	}
 	return db.Delete(link).Error
 }
