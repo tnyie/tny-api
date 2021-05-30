@@ -1,36 +1,31 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi"
-	"github.com/spf13/viper"
+	"github.com/rs/cors"
 
 	"github.com/tnyie/tny-api/config"
 	"github.com/tnyie/tny-api/models"
 	"github.com/tnyie/tny-api/router"
-
-	"github.com/rs/cors"
 )
-
-func seed() {
-	createUsers()
-}
 
 func main() {
 	r := chi.NewRouter()
 
 	config.InitConfig()
 	router.Route(r)
-	time.Sleep(time.Second)
+
+	// wait for database
+	time.Sleep(time.Second * 2)
 	models.InitModels()
 
 	handler := cors.AllowAll().Handler(r)
 
-	if viper.GetString("debug") == "true" {
-		go seed()
-	}
-
+	// oidc.InitOIDC()
+	log.Println("bruhe")
 	http.ListenAndServe(":8080", handler)
 }

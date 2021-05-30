@@ -40,15 +40,16 @@ type UserAuth struct {
 
 // Link structure containing slug/URL pairs
 type Link struct {
-	ID          string `gorm:"primaryKey;type:string;default:uuid_generate_v4()" json:"id,omitempty"`
-	OwnerID     string `json:"owner_id"`
-	Slug        string `gorm:"unique" json:"slug,omitempty"`
-	URL         string `json:"url,omitempty"`
-	UnlockTime  int64  `json:"unlocktime"`
-	Visits      int    `json:"visits"`
-	DateCreated int64  `gorm:"autoCreateTime" json:"created_at,omitempty"`
-	UpdatedAt   int64  `gorm:"autoUpdateTime" json:"updated_at,omitempty"`
-	Lease       int64  `json:"lease,omitempty"`
+	ID         string `gorm:"primaryKey;type:string;default:uuid_generate_v4()" json:"id,omitempty"`
+	OwnerID    string `json:"owner_id"`
+	Slug       string `gorm:"unique" json:"slug,omitempty"`
+	URL        string `json:"url,omitempty"`
+	UnlockTime int64  `json:"unlock_time"`
+	Password   string `json:"password"`
+	Visits     int    `json:"visits"`
+	CreatedAt  int64  `gorm:"autoCreateTime" json:"created_at,omitempty"`
+	UpdatedAt  int64  `gorm:"autoUpdateTime" json:"updated_at,omitempty"`
+	Lease      int64  `json:"lease,omitempty"`
 }
 
 // Visit structure containing time of visitation
@@ -78,4 +79,9 @@ type EmailVerification struct {
 type PasswordResetToken struct {
 	User
 	jwt.StandardClaims
+}
+
+// GenericResponse contains a generic string
+type GenericResponse struct {
+	Data string `json:"data,omitempty"`
 }

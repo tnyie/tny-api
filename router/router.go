@@ -7,6 +7,7 @@ import (
 	mid "github.com/go-chi/chi/middleware"
 
 	"github.com/tnyie/tny-api/middleware"
+	"github.com/tnyie/tny-api/oidc"
 	"github.com/tnyie/tny-api/views"
 )
 
@@ -28,5 +29,7 @@ func apiHandler() http.Handler {
 	r.Mount("/links", linkRouter())
 	r.Mount("/users", userRouter())
 	r.Mount("/visits", visitRouter())
+
+	r.Get("/auth/callback", oidc.HandleCallback)
 	return r
 }

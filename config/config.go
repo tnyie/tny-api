@@ -20,5 +20,6 @@ func initDefaults() {
 	viper.SetDefault("db.port", "")
 	viper.SetDefault("db.name", "")
 	viper.SetDefault("tny.auth.key", "")
+	viper.SetDefault("tny.self.signup", false)
 	viper.SetDefault("sendgrid.credential", "")
 }

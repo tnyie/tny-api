@@ -1,27 +1,34 @@
 version: '3.7'
 
 services:
-
   api:
     build: .
-    container_name: tny-api
+    container_name: tny.local
     ports:
       - "8888:8080"
     environment:
-      - TNY_AUTH_KEY=dudebro
+      # - OAUTH_ENABLED=true
+      # - OAUTH_DOMAIN="http://auth.tny.local:8080"
+      # - OAUTH_CLIENT_ID=links
+      # - OAUTH_CLIENT_SECRET=869368e1-20dd-4cda-b22f-414adb1bb7bf
+      # - OAUTH_CLIENT_CALLBACK="http://tny.local:8888/api/auth/callback"
+      # - OAUTH_SCOPES=roles
+
+      - TNY_AUTH_KEY=$AUTH_KEY
+      - TNY_SELF_SIGNUP=true
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_PASS=pass123
       - DB_NAME=postgres
       - DEBUG=true
-      - SENDGRID_CREDENTIAL=${SENDGRID_CREDENTIAL}
-    networks: 
+      - SENDGRID_CREDENTIAL=$SENDGRID_CREDENTIAL
+    networks:
       backend:
 
   db:
+    container_name: db.tny.local
     image: postgres
-    container_name: tny-db
     ports:
       - "5432:5432"
     environment:
@@ -29,12 +36,14 @@ services:
       - POSTGRES_USER=postgres
     networks:
       backend:
-
+  
   adminer:
+    container_name: adminer
     image: adminer
     ports:
-      - "8989:8080"
-    networks:
+      - "8000:8080"
+    networks: 
       backend:
+
 networks:
   backend:

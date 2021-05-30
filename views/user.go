@@ -45,6 +45,12 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 // PostUser creates a user
 func PostUser(w http.ResponseWriter, r *http.Request) {
+
+	if !viper.GetBool("tny.self.signup") {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	data := make(map[string]string)
 
 	bd, err := ioutil.ReadAll(r.Body)
@@ -85,6 +91,7 @@ func PostUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	w.WriteHeader(http.StatusCreated)
 
 	expirationTime := time.Now().Add(time.Hour).Unix()
@@ -113,11 +120,3 @@ func PostUser(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println("Sent email verification to ", userAuth.Username)
 }
-
-// // ResetPassword sends email with a link
-// func ResetPassword(w http.ResponseWriter, r *http.Request) {
-// 	userAuth, authorized := util.CheckLogin(r, chi.URLParam(r, "id"))
-// 	if authorized && userAuth != nil {
-
-// 	}
-// }

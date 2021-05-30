@@ -11,10 +11,16 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tnyie/tny-api/middleware"
 	"github.com/tnyie/tny-api/models"
+	"github.com/tnyie/tny-api/oidc"
 )
 
 // CreateToken creates an API token
 func CreateToken(w http.ResponseWriter, r *http.Request) {
+
+	if viper.GetBool("oauth.enabled") {
+		oidc.HandleRedirect(w, r)
+	}
+
 	jsonMap := make(map[string]string)
 
 	bd, err := ioutil.ReadAll(r.Body)
