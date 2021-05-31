@@ -14,6 +14,7 @@ services:
       # - OAUTH_CLIENT_CALLBACK="http://tny.local:8888/api/auth/callback"
       # - OAUTH_SCOPES=roles
 
+      - TNY_UI_URL=ui.tny.ie
       - TNY_AUTH_KEY=$AUTH_KEY
       - TNY_SELF_SIGNUP=true
       - DB_HOST=db

@@ -43,7 +43,7 @@ const htmlTemplate = `
         <p style="margin-bottom: 2em;">
             If you did not sign up for an account on <a href="https://tny.ie" style="color: #009688">https://tny.ie</a>, then ignore this email.
         </p>
-        <footer><a href="https://tny.ie/ui/tos" style="color: #009688">Terms of Service</a></footer>
+        <footer><a href="https://ui.tny.ie/tos" style="color: #009688">Terms of Service</a></footer>
     </div>
 </body>
 </html>
@@ -54,5 +54,5 @@ Verification needed for TnyIE
 If you did not sign up for an account on https://tny.ie, ignore this email.
 Go to the following link to activate your account
 %s
-Terms of Service: https://tny.ie/ui/tos
+Terms of Service: https://ui.tny.ie/tos
 `

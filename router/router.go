@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi"
 	mid "github.com/go-chi/chi/middleware"
+	"github.com/spf13/viper"
 
 	"github.com/tnyie/tny-api/middleware"
 	"github.com/tnyie/tny-api/oidc"
@@ -15,7 +16,7 @@ import (
 func Route(r *chi.Mux) {
 	r.Use(mid.Logger)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "https://tny.ie/ui", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "https://"+viper.GetString("tny.ui.url"), http.StatusTemporaryRedirect)
 	})
 	r.Get("/{slug}", views.GetLink)
 	r.Mount("/api", apiHandler())
