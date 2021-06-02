@@ -10,6 +10,11 @@ func (link *Link) Get() error {
 	return db.First(link).Error
 }
 
+// Get link by slug
+func (link *Link) GetBySlug() error {
+	return db.Where("slug = ?", link.Slug).First(&link).Error
+}
+
 // GetLinksByUser eturns each link owned by given user id
 func GetLinksByUser(id string) (*[]Link, error) {
 	var links []Link

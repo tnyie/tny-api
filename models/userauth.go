@@ -20,6 +20,7 @@ func (user *UserAuth) VerifyPassword(password string) error {
 	// fetch user
 	err := db.First(user).Error
 	if err != nil {
+		log.Println("Failed to fetch user")
 		return err
 	}
 	return bcrypt.CompareHashAndPassword([]byte(user.Hash), []byte(password))

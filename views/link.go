@@ -24,7 +24,7 @@ func GetLink(w http.ResponseWriter, r *http.Request) {
 	var link models.Link
 	link.Slug = chi.URLParam(r, "slug")
 	log.Println("TEST", link.Slug)
-	err := link.Get()
+	err := link.GetBySlug()
 	log.Println("TEST", link)
 	if err != nil {
 		log.Println("Search error\n", err)
