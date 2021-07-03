@@ -25,6 +25,7 @@ func Route(r *chi.Mux) {
 func apiHandler() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.CheckToken)
+	r.Mount("/gdpr", gdprRouter())
 	r.Mount("/tokens", tokenRouter())
 	r.Mount("/verify", verificationRouter())
 	r.Mount("/links", linkRouter())

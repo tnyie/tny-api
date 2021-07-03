@@ -81,6 +81,13 @@ type PasswordResetToken struct {
 	jwt.StandardClaims
 }
 
+// GDPRData structures GDPR Data
+type GDPRData struct {
+	UserData     User
+	UserAuthData UserAuth
+	Links        []Link
+}
+
 // GenericResponse contains a generic string
 type GenericResponse struct {
 	Data string `json:"data,omitempty"`

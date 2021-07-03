@@ -155,6 +155,37 @@ func GetLinksByUser(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, encoded, http.StatusOK)
 }
 
+// UpdateLinkLease updates link lease time if user is
+// authenticated, link is expired, and user owns resource
+func UpdateLinkLease(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	log.Println("Updating link lease for link id ", id)
+
+	link := &models.Link{ID: id}
+
+	err := link.Get()
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	if _, authorized := util.CheckLogin(r, link.OwnerID); !authorized {
+		w.WriteHeader(http.StatusUnauthorized)
+		log.Println("User is not authorized to modify link lease")
+		return
+	}
+
+	err = link.Put(link.OwnerID, "link_lease", time.Now().Add(time.Hour*24*30).Unix())
+	if err != nil {
+		w.WriteHeader(http.StatusConflict)
+		log.Println("Error updating link lease\n", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 // PutLinkAttribute updates a given attribute
 func PutLinkAttribute(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
