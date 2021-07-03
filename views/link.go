@@ -176,7 +176,7 @@ func UpdateLinkLease(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = link.Put(link.OwnerID, "link_lease", time.Now().Add(time.Hour*24*30).Unix())
+	err = link.Put(link.OwnerID, "lease", time.Now().Add(time.Hour*24*30).Unix())
 	if err != nil {
 		w.WriteHeader(http.StatusConflict)
 		log.Println("Error updating link lease\n", err)
