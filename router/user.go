@@ -10,7 +10,8 @@ import (
 func userRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Get("/{id}", views.GetUser)
-	// r.Put("/{id}/password", views.ResetPassword)
 	r.Post("/", views.PostUser)
+	r.Put("/password", views.PasswordResetRequest)
+	r.Put("/password/{token}", views.PasswordReset)
 	return r
 }

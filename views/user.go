@@ -112,11 +112,132 @@ func PostUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = mail.SendMail(userAuth, tokenString)
+	err = mail.SendMailVerification(userAuth, tokenString)
 	if err != nil {
 		log.Println("Error sending email to ", userAuth.Email)
 		log.Println(err)
 		return
 	}
 	log.Println("Sent email verification to ", userAuth.Username)
+	w.WriteHeader(http.StatusOK)
+}
+
+// PasswordResetRequest sends an email with a link with token used in PasswordReset
+func PasswordResetRequest(w http.ResponseWriter, r *http.Request) {
+	data := make(map[string]string)
+
+	bd, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Println("Couldn't read json Body")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if err = json.Unmarshal(bd, &data); err != nil {
+		log.Println("Couldn't parse json body\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if data["email"] == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	userAuth := &models.UserAuth{Email: data["email"]}
+
+	if err := userAuth.Get(); err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+
+	expirationTime := time.Now().Add(time.Hour).Unix()
+
+	claims := &models.EmailVerification{
+		Email: data["email"],
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime,
+			IssuedAt:  time.Now().Unix(),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(
+		viper.GetString("tny.auth.key"),
+	))
+
+	if err != nil {
+		log.Println("Couldn't create token for email verification")
+		return
+	}
+
+	err = mail.SendPasswordVerification(userAuth, tokenString)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Println("Error sending email to ", userAuth.Email)
+		log.Println(err)
+		return
+	}
+	log.Println("Sent email verification to ", userAuth.Username)
+	w.WriteHeader(http.StatusOK)
+}
+
+// PasswordReset resets password from signed jwt in 'token' url param
+func PasswordReset(w http.ResponseWriter, r *http.Request) {
+	tokenString := chi.URLParam(r, "token")
+
+	data := make(map[string]string)
+
+	bd, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Println("Couldn't read json Body")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if err = json.Unmarshal(bd, &data); err != nil {
+		log.Println("Couldn't parse json body\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if data["password"] == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Println("Missing password in json body")
+		return
+	}
+
+	log.Println("tokenString : ", tokenString)
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(viper.GetString("tny.auth.key")), nil
+	})
+
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		log.Println("Error parsing verification token\n", err)
+		return
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		email := claims["Email"].(string)
+
+		userAuth := &models.UserAuth{Email: email}
+		err = userAuth.Get()
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			log.Println("User not found\n", err)
+			return
+		}
+
+		if err = userAuth.ChangePassword(data["password"]); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Println("Error changing password\n", err)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		log.Println("User ", userAuth.UID, " changed password")
+		return
+	}
+
+	w.WriteHeader(http.StatusUnauthorized)
 }

@@ -159,7 +159,6 @@ func GetLinksByUser(w http.ResponseWriter, r *http.Request) {
 // authenticated, link is expired, and user owns resource
 func UpdateLinkLease(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-
 	log.Println("Updating link lease for link id ", id)
 
 	link := &models.Link{ID: id}
@@ -266,14 +265,15 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if link.OwnerID == "" || link.Slug == "" {
-		link.Slug = ""
+		var str []byte
 		chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-"
 		for i := 0; i < 6; i++ {
-			link.Slug = link.Slug + string(chars[rand.Intn(62)])
-			log.Println(link.Slug)
+			str = append(str, chars[rand.Intn(62)])
 		}
+		link.Slug = string(str)
 	}
 
+	// if zero-value will be set by gorm to current time
 	link.UpdatedAt, link.CreatedAt = 0, 0
 	link.Lease = time.Now().Add(time.Hour * 24 * 30).Unix()
 	err = link.Create()

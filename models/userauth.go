@@ -47,3 +47,17 @@ func (user *UserAuth) Verify() error {
 func (user *UserAuth) Get() error {
 	return db.First(user).Error
 }
+
+func (user *UserAuth) ChangePassword(password string) error {
+	hash, err := HashPassword([]byte(password))
+	if err != nil {
+		log.Println("error hashing password")
+		return err
+	}
+
+	user.Hash = hash
+	err = db.Model(&user).Update("hash", user.Hash).Error
+
+	return err
+
+}
