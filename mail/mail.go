@@ -29,7 +29,7 @@ func SendMailVerification(user *models.UserAuth, link string) error {
 }
 
 func makeMailVerificationHTMLContent(link string) string {
-	link = "https://tny.ie/api/verify/reset" + link
+	link = "https://tny.ie/api/verify/" + link
 	return fmt.Sprintf(htmlMailVerificationTemplate, link, link)
 }
 

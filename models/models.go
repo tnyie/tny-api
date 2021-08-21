@@ -17,7 +17,7 @@ func InitModels() {
 	db = database.InitDB()
 
 	db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";") // enable uuid generation on server
-	db.AutoMigrate(&User{}, &UserAuth{}, &Link{}, &Visit{})
+	db.AutoMigrate(&User{}, &UserAuth{}, &APIKey{}, &Link{}, &Visit{})
 }
 
 // User structure containing non-authenticative information
@@ -91,4 +91,10 @@ type GDPRData struct {
 // GenericResponse contains a generic string
 type GenericResponse struct {
 	Data string `json:"data,omitempty"`
+}
+
+type APIKey struct {
+	ID        string `gorm:"primaryKey;type:string;default:uuid_generate_v4()" json:"id,omitempty"`
+	UserID    string
+	CreatedAt int64 `gorm:"autoCreateTime" json:"created_at,omitempty"`
 }

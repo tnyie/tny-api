@@ -10,40 +10,13 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/spf13/viper"
 	"github.com/tnyie/tny-api/models"
-	"github.com/tnyie/tny-api/oidc"
 	"github.com/tnyie/tny-api/util"
 )
 
 // CreateToken creates an API token
 func CreateToken(w http.ResponseWriter, r *http.Request) {
 
-	if viper.GetBool("oauth.enabled") {
-		oidc.HandleRedirect(w, r)
-	}
-
-	jsonMap := make(map[string]string)
-
-	bd, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Println("Error reading request body\n", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err = json.Unmarshal(bd, &jsonMap)
-	if err != nil {
-		log.Println("Couldn't unmarshall json body")
-	}
-	userAuth := &models.UserAuth{
-		Email:    jsonMap["email"],
-		Username: jsonMap["username"],
-	}
-
-	err = userAuth.VerifyPassword(jsonMap["password"])
-	if err != nil {
-		log.Println("Incorrect password")
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
+	userAuth := getLogin(r)
 
 	expirationTime := time.Now().Add(time.Hour * 5)
 
@@ -70,7 +43,6 @@ func CreateToken(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	log.Println(encoded)
 	respondJSON(w, encoded, http.StatusCreated)
 }
 
@@ -90,4 +62,55 @@ func InspectToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusUnauthorized)
+}
+
+func CreateAPIKey(w http.ResponseWriter, r *http.Request) {
+	user := getLogin(r)
+	if user != nil {
+		key, err := models.GenerateAPIKey(user.UID)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Println("Couldn't create api key")
+			return
+		}
+
+		jsonResp := make(map[string]interface{})
+		jsonResp["key"] = key.ID
+		encoded, err := json.Marshal(jsonResp)
+		if err != nil {
+			log.Println("Couldn't unmarshall token response")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		respondJSON(w, encoded, http.StatusCreated)
+		return
+	}
+	w.WriteHeader(http.StatusUnauthorized)
+}
+
+func getLogin(r *http.Request) *models.UserAuth {
+	jsonMap := make(map[string]string)
+
+	bd, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Println("Error reading request body\n", err)
+		return nil
+	}
+	err = json.Unmarshal(bd, &jsonMap)
+	if err != nil {
+		log.Println("Couldn't unmarshall json body")
+		return nil
+	}
+	userAuth := &models.UserAuth{
+		Email:    jsonMap["email"],
+		Username: jsonMap["username"],
+	}
+
+	err = userAuth.VerifyPassword(jsonMap["password"])
+	if err != nil {
+		log.Println("Incorrect password")
+		return nil
+
+	}
+	return userAuth
 }

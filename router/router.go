@@ -27,6 +27,7 @@ func apiHandler() http.Handler {
 	r.Use(middleware.CheckToken)
 	r.Mount("/gdpr", gdprRouter())
 	r.Mount("/tokens", tokenRouter())
+	r.Mount("/keys", keyRouter())
 	r.Mount("/verify", verificationRouter())
 	r.Mount("/links", linkRouter())
 	r.Mount("/users", userRouter())

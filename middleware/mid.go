@@ -19,13 +19,8 @@ func CheckToken(next http.Handler) http.Handler {
 
 		// fetch authorization heade
 		parts := strings.Split(r.Header.Get("Authorization"), " ")
-		if parts[0] != "Bearer" || parts[1] != "Key" {
-			next.ServeHTTP(w, r)
-			return
-		}
 
 		if parts[1] != "" {
-
 			if parts[0] == "Bearer" {
 				token, err := jwt.Parse(parts[1], func(token *jwt.Token) (interface{}, error) {
 					return []byte(viper.GetString("tny.auth.key")), nil
@@ -44,8 +39,7 @@ func CheckToken(next http.Handler) http.Handler {
 				}
 				log.Println("Invalid claims")
 				next.ServeHTTP(w, r)
-			} else {
-				// parts[0] == "Key"
+			} else if parts[0] == "Key" {
 				keyString := parts[1]
 				userID, err := models.ValidAPIKey(keyString)
 				if err != nil {

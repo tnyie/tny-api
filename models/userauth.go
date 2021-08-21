@@ -18,7 +18,7 @@ func HashPassword(password []byte) (string, error) {
 // VerifyPassword compares provided plaintext password against stored hash
 func (user *UserAuth) VerifyPassword(password string) error {
 	// fetch user
-	err := db.First(user).Error
+	err := db.First(&user).Error
 	if err != nil {
 		log.Println("Failed to fetch user")
 		return err
