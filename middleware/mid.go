@@ -4,45 +4,59 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"reflect"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/spf13/viper"
+	"github.com/tnyie/tny-api/models"
 )
 
-type AuthCtx struct{}
+type BearerCtx struct{}
+type KeyCtx struct{}
 
 func CheckToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// fetch authorization heade
 		parts := strings.Split(r.Header.Get("Authorization"), " ")
-		if parts[0] != "Bearer" {
+		if parts[0] != "Bearer" || parts[1] != "Key" {
 			next.ServeHTTP(w, r)
 			return
 		}
+
 		if parts[1] != "" {
-			token, err := jwt.Parse(parts[1], func(token *jwt.Token) (interface{}, error) {
-				return []byte(viper.GetString("tny.auth.key")), nil
-			})
-			if err != nil {
-				log.Println("Error parsing token")
+
+			if parts[0] == "Bearer" {
+				token, err := jwt.Parse(parts[1], func(token *jwt.Token) (interface{}, error) {
+					return []byte(viper.GetString("tny.auth.key")), nil
+				})
+				if err != nil {
+					log.Println("Error parsing token")
+					next.ServeHTTP(w, r)
+					return
+				}
+
+				if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+					log.Println("Claims are valid")
+					log.Println("Valid token, claims: ", claims)
+					next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), BearerCtx{}, claims)))
+					return
+				}
+				log.Println("Invalid claims")
 				next.ServeHTTP(w, r)
+			} else {
+				// parts[0] == "Key"
+				keyString := parts[1]
+				userID, err := models.ValidAPIKey(keyString)
+				if err != nil {
+					w.WriteHeader(http.StatusUnauthorized)
+					log.Println("API Key invalid\n", err)
+					next.ServeHTTP(w, r)
+					return
+				}
+				next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), KeyCtx{}, userID)))
 				return
 			}
-
-			log.Println(token.Valid)
-			log.Println(reflect.TypeOf(token.Claims))
-
-			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-				log.Println("Claims are valid")
-				log.Println("Valid token, claims: ", claims)
-				next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), AuthCtx{}, claims)))
-				return
-			}
-			log.Println("Invalid claims")
-			next.ServeHTTP(w, r)
 		}
 		log.Println("No authentication header")
 		// TODO

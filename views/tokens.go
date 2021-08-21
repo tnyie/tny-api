@@ -9,9 +9,9 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/spf13/viper"
-	"github.com/tnyie/tny-api/middleware"
 	"github.com/tnyie/tny-api/models"
 	"github.com/tnyie/tny-api/oidc"
+	"github.com/tnyie/tny-api/util"
 )
 
 // CreateToken creates an API token
@@ -76,13 +76,10 @@ func CreateToken(w http.ResponseWriter, r *http.Request) {
 
 // InspectToken returns a status 200 if logged in, 403 if not
 func InspectToken(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	if claims, ok := ctx.Value(middleware.AuthCtx{}).(jwt.MapClaims); ok {
-		log.Println(ctx.Value(middleware.AuthCtx{}))
+	if user, valid := util.CheckLogin(r, ""); valid {
 		w.WriteHeader(http.StatusAccepted)
 		jsonResp := make(map[string]interface{})
-		jsonResp["user_id"] = claims["UserID"]
+		jsonResp["user_id"] = user.UID
 		encoded, err := json.Marshal(jsonResp)
 		if err != nil {
 			log.Println("Couldn't unmarshall response")
@@ -91,6 +88,6 @@ func InspectToken(w http.ResponseWriter, r *http.Request) {
 		}
 		respondJSON(w, encoded, http.StatusCreated)
 	}
-	log.Println(ctx.Value(middleware.AuthCtx{}))
+
 	w.WriteHeader(http.StatusUnauthorized)
 }

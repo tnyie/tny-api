@@ -10,11 +10,9 @@ import (
 	"path"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi"
 	"gorm.io/gorm"
 
-	"github.com/tnyie/tny-api/middleware"
 	"github.com/tnyie/tny-api/models"
 	"github.com/tnyie/tny-api/util"
 )
@@ -255,13 +253,10 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 	log.Println("UNLOCK_TIME: ", link.UnlockTime)
 
 	// TODO use util
-	if claims, ok := r.Context().Value(middleware.AuthCtx{}).(jwt.MapClaims); ok {
-		if userID, ok := claims["UserID"].(string); ok {
-			log.Println(claims)
-			link.OwnerID = userID
-		} else {
-			link.OwnerID = ""
-		}
+	if user, valid := util.CheckLogin(r, ""); valid {
+		link.OwnerID = user.UID
+	} else {
+		link.OwnerID = ""
 	}
 
 	if link.OwnerID == "" || link.Slug == "" {
