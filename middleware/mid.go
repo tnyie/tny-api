@@ -20,7 +20,7 @@ func CheckToken(next http.Handler) http.Handler {
 		// fetch authorization heade
 		parts := strings.Split(r.Header.Get("Authorization"), " ")
 
-		if len(parts) == 3 && parts[1] != "" {
+		if len(parts) == 2 && parts[1] != "" {
 			if parts[0] == "Bearer" {
 				token, err := jwt.Parse(parts[1], func(token *jwt.Token) (interface{}, error) {
 					return []byte(viper.GetString("tny.auth.key")), nil
