@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
+	"github.com/spf13/viper"
 	"gorm.io/gorm"
 
 	"github.com/tnyie/tny-api/models"
@@ -36,7 +37,7 @@ func GetLink(w http.ResponseWriter, r *http.Request) {
 			if link.UnlockTime < curr_time {
 				if link.Password != "" {
 					log.Println("Link requires password, passing to other handler")
-					GetAuthenticatedLink(w, r)
+					http.Redirect(w, r, "https://"+viper.GetString("tny.ui.url")+"/redirect/"+link.Slug, http.StatusTemporaryRedirect)
 					return
 				}
 				log.Println("Redirecting to", link.URL)
@@ -103,7 +104,7 @@ func GetAuthenticatedLink(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			// to indicate that resource is not yet ready
-			http.Redirect(w, r, "http://localhost:8080/redirect/"+link.Slug, http.StatusTemporaryRedirect)
+			http.Redirect(w, r, "https://"+viper.GetString("tny.ui.url")+"/redirect/"+link.Slug, http.StatusTemporaryRedirect)
 			return
 		}
 	}
