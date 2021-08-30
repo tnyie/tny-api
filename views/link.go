@@ -64,10 +64,11 @@ func GetLink(w http.ResponseWriter, r *http.Request) {
 func GetAuthenticatedLink(w http.ResponseWriter, r *http.Request) {
 	var link models.Link
 	link.Slug = chi.URLParam(r, "slug")
-	err := link.Get()
+	err := link.GetBySlug()
 	if err != nil {
 		log.Println("Search error\n", err)
 		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 
 	curr_time := time.Now().Unix()
@@ -94,20 +95,32 @@ func GetAuthenticatedLink(w http.ResponseWriter, r *http.Request) {
 						if jsonMap["password"] == link.Password {
 							encoded, err := json.Marshal(&models.GenericResponse{Data: link.URL})
 							if err != nil {
+								w.WriteHeader(http.StatusInternalServerError)
 								log.Println("Couldn't generate response")
 								return
 							}
 							respondJSON(w, encoded, http.StatusOK)
 							return
 						}
+						w.WriteHeader(http.StatusUnauthorized)
+						log.Println("incorrect password")
+						return
 					}
+					w.WriteHeader(http.StatusUnauthorized)
+					log.Println("no password provided for authenticated link")
+					return
 				}
+				w.WriteHeader(http.StatusUnauthorized)
+				log.Println("Link has no password")
+				return
 			}
-			// to indicate that resource is not yet ready
-			http.Redirect(w, r, "https://"+viper.GetString("tny.ui.url")+"/redirect/"+link.Slug, http.StatusTemporaryRedirect)
+			log.Println("link not unlocked yet")
+			w.WriteHeader(http.StatusFound)
 			return
 		}
+		log.Println("Link lease exceeded")
 	}
+	log.Println("link is invalid")
 	// if link is missing url or has expired, 404
 	w.WriteHeader(http.StatusNotFound)
 }
