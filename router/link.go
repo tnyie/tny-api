@@ -10,7 +10,9 @@ import (
 func linkRouter() http.Handler {
 	r := chi.NewRouter()
 
-	r.Get("/{slug}", views.GetLink)
+	r.Get("/link/{id}", views.GetLink)
+	r.Get("/{slug}", views.GetLinkFromSlug)
+
 	r.Get("/user/{id}", views.GetLinksByUser)
 	r.Put("/authenticated/{slug}", views.GetAuthenticatedLink)
 	// r.Get("/{id}/{attr}", views.GetLinkAttribute)

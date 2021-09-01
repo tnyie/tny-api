@@ -18,7 +18,7 @@ func Route(r *chi.Mux) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "https://"+viper.GetString("tny.ui.url"), http.StatusTemporaryRedirect)
 	})
-	r.Get("/{slug}", views.GetLink)
+	r.Get("/{slug}", views.RedirectSlug)
 	r.Mount("/api", apiHandler())
 }
 

@@ -18,13 +18,11 @@ import (
 	"github.com/tnyie/tny-api/util"
 )
 
-// GetLink returns a link object
-func GetLink(w http.ResponseWriter, r *http.Request) {
+// RedirectSlug takes the link's slug as a parameter, and redirects request
+func RedirectSlug(w http.ResponseWriter, r *http.Request) {
 	var link models.Link
 	link.Slug = chi.URLParam(r, "slug")
-	log.Println("TEST", link.Slug)
 	err := link.GetBySlug()
-	log.Println("TEST", link)
 	if err != nil {
 		log.Println("Search error\n", err)
 		w.WriteHeader(http.StatusNotFound)
@@ -37,7 +35,10 @@ func GetLink(w http.ResponseWriter, r *http.Request) {
 			if link.UnlockTime < curr_time {
 				if link.Password != "" {
 					log.Println("Link requires password, passing to other handler")
-					http.Redirect(w, r, "https://"+viper.GetString("tny.ui.url")+"/redirect/"+link.Slug, http.StatusTemporaryRedirect)
+					http.Redirect(w, r,
+						"https://"+viper.GetString("tny.ui.url")+"/redirect/"+link.Slug,
+						http.StatusTemporaryRedirect,
+					)
 					return
 				}
 				log.Println("Redirecting to", link.URL)
@@ -58,6 +59,61 @@ func GetLink(w http.ResponseWriter, r *http.Request) {
 		log.Println("Link corrupted")
 		w.WriteHeader(404)
 	}
+}
+
+// GetLink returns a link object
+func GetLinkFromSlug(w http.ResponseWriter, r *http.Request) {
+	var link models.Link
+	link.ID = chi.URLParam(r, "slug")
+
+	err := link.GetBySlug()
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		log.Println("Error getting link from id\n", err)
+		return
+	}
+	_, authorized := util.CheckLogin(r, link.ID)
+	if !authorized {
+		w.WriteHeader(http.StatusUnauthorized)
+		log.Println("user not authorized to access link object")
+		return
+	}
+
+	encoded, err := json.Marshal(&link)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Println("Failed to marshal link to json\n", err)
+		return
+	}
+
+	respondJSON(w, encoded, http.StatusOK)
+}
+
+func GetLink(w http.ResponseWriter, r *http.Request) {
+	var link models.Link
+	link.ID = chi.URLParam(r, "id")
+
+	err := link.Get()
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		log.Println("Error getting link from id\n", err)
+		return
+	}
+	_, authorized := util.CheckLogin(r, link.ID)
+	if !authorized {
+		w.WriteHeader(http.StatusUnauthorized)
+		log.Println("user not authorized to access link object")
+		return
+	}
+
+	encoded, err := json.Marshal(&link)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Println("Failed to marshal link to json\n", err)
+		return
+	}
+
+	respondJSON(w, encoded, http.StatusOK)
 }
 
 // GetAuthenticatedLink returns the
@@ -100,6 +156,7 @@ func GetAuthenticatedLink(w http.ResponseWriter, r *http.Request) {
 								return
 							}
 							respondJSON(w, encoded, http.StatusOK)
+							setVisit(&link)
 							return
 						}
 						w.WriteHeader(http.StatusUnauthorized)
@@ -344,13 +401,4 @@ func SearchLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, encoded, http.StatusAccepted)
-}
-
-func getLink(id string) (*models.Link, error) {
-	link := &models.Link{ID: id}
-	if err := link.Get(); err != nil {
-		log.Println("error getting link\n", err)
-		return nil, err
-	}
-	return link, nil
 }

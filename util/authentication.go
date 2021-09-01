@@ -22,6 +22,7 @@ func CheckLogin(r *http.Request, requiredID string) (*models.UserAuth, bool) {
 			}
 			if !user.Enabled {
 				log.Println("User not enabled")
+				return user, false
 			}
 		}
 	}
