@@ -99,7 +99,7 @@ func GetLink(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error getting link from id\n", err)
 		return
 	}
-	_, authorized := util.CheckLogin(r, link.ID)
+	_, authorized := util.CheckLogin(r, link.OwnerID)
 	if !authorized {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Println("user not authorized to access link object")
