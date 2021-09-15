@@ -25,7 +25,6 @@ func main() {
 
 	handler := cors.AllowAll().Handler(r)
 
-	// oidc.InitOIDC()
 	log.Println("bruhe")
 	http.ListenAndServe(":8080", handler)
 }

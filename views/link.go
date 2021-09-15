@@ -323,7 +323,6 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("UNLOCK_TIME: ", link.UnlockTime)
 
-	// TODO use util
 	if user, valid := util.CheckLogin(r, ""); valid {
 		link.OwnerID = user.UID
 	} else {
