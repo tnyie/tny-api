@@ -36,6 +36,7 @@ type UserAuth struct {
 	Email    string `gorm:"unique" json:"email,omitempty"`
 	Hash     string `json:"hash,omitempty"`
 	Enabled  bool   `json:"enabled"`
+	Admin    bool   `json:"admin"`
 }
 
 // Link structure containing slug/URL pairs
