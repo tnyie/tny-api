@@ -12,7 +12,7 @@ import (
 // GetUserGDPR returns a gdpr dump to the user
 func GetUserGDPR(w http.ResponseWriter, r *http.Request) {
 	log.Println("User fetching GDPR data")
-	userAuth, authenticated := util.CheckLogin(r, "")
+	userAuth, authenticated, _ := util.CheckLogin(r, "")
 
 	if !authenticated || userAuth.UID == "" {
 		w.WriteHeader(http.StatusUnauthorized)

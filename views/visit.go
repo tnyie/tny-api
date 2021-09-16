@@ -19,7 +19,7 @@ func GetVisits(w http.ResponseWriter, r *http.Request) {
 	}
 	link.Get()
 
-	if _, authorized := util.CheckLogin(r, link.OwnerID); !authorized {
+	if _, authorized, admin := util.CheckLogin(r, link.OwnerID); !authorized && !admin {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}

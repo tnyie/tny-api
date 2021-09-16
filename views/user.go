@@ -21,8 +21,8 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 	uid := chi.URLParam(r, "id")
 
-	_, authorized := util.CheckLogin(r, uid)
-	if !authorized {
+	_, authorized, admin := util.CheckLogin(r, uid)
+	if !authorized && !admin {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
