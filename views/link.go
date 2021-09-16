@@ -2,7 +2,6 @@ package views
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/spf13/viper"
-	"gorm.io/gorm"
 
 	"github.com/tnyie/tny-api/models"
 	"github.com/tnyie/tny-api/util"
@@ -64,7 +62,7 @@ func RedirectSlug(w http.ResponseWriter, r *http.Request) {
 // GetLink returns a link object
 func GetLinkFromSlug(w http.ResponseWriter, r *http.Request) {
 	var link models.Link
-	link.ID = chi.URLParam(r, "slug")
+	link.Slug = chi.URLParam(r, "slug")
 
 	err := link.GetBySlug()
 	if err != nil {
@@ -72,8 +70,9 @@ func GetLinkFromSlug(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error getting link from id\n", err)
 		return
 	}
-	_, authorized := util.CheckLogin(r, link.ID)
-	if !authorized {
+
+	_, authorized, admin := util.CheckLogin(r, link.OwnerID)
+	if !authorized && !admin {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Println("user not authorized to access link object")
 		return
@@ -99,8 +98,8 @@ func GetLink(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error getting link from id\n", err)
 		return
 	}
-	_, authorized := util.CheckLogin(r, link.OwnerID)
-	if !authorized {
+	_, authorized, admin := util.CheckLogin(r, link.OwnerID)
+	if !authorized && !admin {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Println("user not authorized to access link object")
 		return
@@ -201,9 +200,8 @@ func setVisit(link *models.Link) {
 func GetLinksByUser(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	_, authorized := util.CheckLogin(r, id)
-
-	if !authorized {
+	_, authorized, admin := util.CheckLogin(r, id)
+	if !authorized && !admin {
 		log.Println("User unauthorized to access resource")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -238,7 +236,8 @@ func UpdateLinkLease(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, authorized := util.CheckLogin(r, link.OwnerID); !authorized {
+	_, authorized, admin := util.CheckLogin(r, link.OwnerID)
+	if !authorized && !admin {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Println("User is not authorized to modify link lease")
 		return
@@ -267,9 +266,8 @@ func PutLinkAttribute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, authorized := util.CheckLogin(r, link.OwnerID)
-
-	if !authorized {
+	_, authorized, admin := util.CheckLogin(r, link.OwnerID)
+	if !authorized && !admin {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -283,6 +281,7 @@ func PutLinkAttribute(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	if err = json.Unmarshal(bd, &data); err != nil {
 		log.Println(string(bd))
 		log.Println("Couldn't unmarhsal json\n", err)
@@ -323,10 +322,11 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("UNLOCK_TIME: ", link.UnlockTime)
 
-	if user, valid := util.CheckLogin(r, ""); valid {
-		link.OwnerID = user.UID
-	} else {
+	user, authenticated, admin := util.CheckLogin(r, "")
+	if !authenticated && !admin {
 		link.OwnerID = ""
+	} else {
+		link.OwnerID = user.UID
 	}
 
 	if link.OwnerID == "" || link.Slug == "" {
@@ -362,42 +362,18 @@ func DeleteLink(w http.ResponseWriter, r *http.Request) {
 	link := &models.Link{ID: chi.URLParam(r, "id")}
 	link.Get()
 
-	userAuth, authorized := util.CheckLogin(r, link.OwnerID)
+	userAuth, authorized, admin := util.CheckLogin(r, link.OwnerID)
 
-	if !authorized || link.OwnerID == "" || link.OwnerID != userAuth.UID {
-		log.Println("Link's Owner ID : ", link.OwnerID)
-		log.Println("User's ID ", userAuth.UID)
+	if admin || authorized && link.OwnerID != "" {
+		link.Delete()
+		w.WriteHeader(http.StatusAccepted)
+		return
+	}
+
+	if link.OwnerID == "" || link.OwnerID != userAuth.UID {
 		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
 
-	err := link.Delete()
-	if err != nil {
-		log.Println("error deleting link\n", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	w.WriteHeader(http.StatusAccepted)
-}
-
-// SearchLink returns link object from given slug
-func SearchLink(w http.ResponseWriter, r *http.Request) {
-	var link *models.Link
-	link.Slug = chi.URLParam(r, "query")
-	if err := link.Search(); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			w.WriteHeader(404)
-			log.Println("Couldn't find slug\n", err)
-			return
-		}
-		w.WriteHeader(502)
-		return
-	}
-	encoded, err := json.Marshal(link)
-	if err != nil {
-		// do something
-		w.WriteHeader(502)
-		log.Println("Couldn't encode json response")
-		return
-	}
-	respondJSON(w, encoded, http.StatusAccepted)
+	w.WriteHeader(http.StatusUnauthorized)
 }
