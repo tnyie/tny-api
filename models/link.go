@@ -7,7 +7,7 @@ import (
 
 // Get .
 func (link *Link) Get() error {
-	return db.First(link).Error
+	return db.First(&link, link.ID).Error
 }
 
 // Get link by slug
@@ -41,7 +41,7 @@ func (link *Link) Create() error {
 
 // Read a db entry by ID
 func (link *Link) Read() error {
-	return db.First(link).Error
+	return db.First(&link, link.ID).Error
 }
 
 // Search for db entry by slug
