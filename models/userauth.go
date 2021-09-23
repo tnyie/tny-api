@@ -45,7 +45,7 @@ func (user *UserAuth) Verify() error {
 
 // Get userAuth data
 func (user *UserAuth) Get() error {
-	return db.First(user).Error
+	return db.First(&user, user.UID).Error
 }
 
 func (user *UserAuth) ChangePassword(password string) error {
