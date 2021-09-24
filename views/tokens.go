@@ -13,6 +13,27 @@ import (
 	"github.com/tnyie/tny-api/util"
 )
 
+// InspectToken returns a status 200 if logged in, 403 if not
+func InspectToken(w http.ResponseWriter, r *http.Request) {
+	if user, valid, admin := util.CheckLogin(r, ""); valid {
+		w.WriteHeader(http.StatusAccepted)
+		jsonResp := make(map[string]interface{})
+		jsonResp["user_id"] = user.UID
+		if admin {
+			jsonResp["admin"] = admin
+		}
+		encoded, err := json.Marshal(jsonResp)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Println("Couldn't unmarshall response")
+			return
+		}
+		respondJSON(w, encoded, http.StatusOK)
+	}
+
+	w.WriteHeader(http.StatusUnauthorized)
+}
+
 // CreateToken creates an API token
 func CreateToken(w http.ResponseWriter, r *http.Request) {
 
@@ -44,27 +65,6 @@ func CreateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, encoded, http.StatusCreated)
-}
-
-// InspectToken returns a status 200 if logged in, 403 if not
-func InspectToken(w http.ResponseWriter, r *http.Request) {
-	if user, valid, admin := util.CheckLogin(r, ""); valid {
-		w.WriteHeader(http.StatusAccepted)
-		jsonResp := make(map[string]interface{})
-		jsonResp["user_id"] = user.UID
-		if admin {
-			jsonResp["admin"] = admin
-		}
-		encoded, err := json.Marshal(jsonResp)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			log.Println("Couldn't unmarshall response")
-			return
-		}
-		respondJSON(w, encoded, http.StatusOK)
-	}
-
-	w.WriteHeader(http.StatusUnauthorized)
 }
 
 func CreateAPIKey(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +113,7 @@ func getLogin(r *http.Request) *models.UserAuth {
 	if err != nil {
 		log.Println("Incorrect password")
 		return nil
-
 	}
+
 	return userAuth
 }

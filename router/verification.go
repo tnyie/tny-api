@@ -9,6 +9,7 @@ import (
 
 func verificationRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Get("/{token}", views.VerifyEmail)
+	r.Get("/", views.VerifyEmail)
+	r.Get("/{token}", views.VerifyEmailCheck)
 	return r
 }

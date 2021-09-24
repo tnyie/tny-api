@@ -5,7 +5,7 @@ import "log"
 // Get user object
 func (user *User) Get() error {
 	log.Println("getting user\n", user.UID)
-	return db.First(&user, user.UID).Error
+	return db.First(&user, "uid = ?", user.UID).Error
 }
 
 // Create user object

@@ -30,10 +30,12 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	user := &models.User{
 		UID: uid,
 	}
+
 	err := user.Get()
 	if err != nil {
 		log.Println("Error fetching user\n", err)
 	}
+
 	encoded, err := json.Marshal(user)
 	if err != nil {
 		log.Println("Error marshalling user object")
@@ -92,11 +94,49 @@ func PostUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sendEmailVerification(userAuth)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Println("Error sending email to ", userAuth.Email)
+		log.Println(err)
+		return
+	}
+	log.Println("Sent email verification to ", userAuth.Username)
 	w.WriteHeader(http.StatusCreated)
+}
 
+// Send email Verification
+func VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	email := chi.URLParam(r, "email")
+
+	if email == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	userAuth := &models.UserAuth{
+		Email: email,
+	}
+
+	err := userAuth.GetByEmail()
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	err = sendEmailVerification(userAuth)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func sendEmailVerification(userAuth *models.UserAuth) error {
 	expirationTime := time.Now().Add(time.Hour).Unix()
 	claims := &models.EmailVerification{
-		Email: user.Email,
+		Email: userAuth.Email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime,
 			IssuedAt:  time.Now().Unix(),
@@ -109,17 +149,16 @@ func PostUser(w http.ResponseWriter, r *http.Request) {
 	))
 	if err != nil {
 		log.Println("Couldn't create token for email verification")
-		return
+		return err
 	}
 
 	err = mail.SendMailVerification(userAuth, tokenString)
 	if err != nil {
 		log.Println("Error sending email to ", userAuth.Email)
-		log.Println(err)
-		return
+		return err
 	}
-	log.Println("Sent email verification to ", userAuth.Username)
-	w.WriteHeader(http.StatusOK)
+	log.Println("sent email verification")
+	return nil
 }
 
 // PasswordResetRequest sends an email with a link with token used in PasswordReset

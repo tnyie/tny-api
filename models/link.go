@@ -7,7 +7,7 @@ import (
 
 // Get .
 func (link *Link) Get() error {
-	return db.First(&link, link.ID).Error
+	return db.First(&link, "id = ?", link.ID).Error
 }
 
 // Get link by slug

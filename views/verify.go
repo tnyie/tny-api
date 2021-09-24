@@ -11,7 +11,7 @@ import (
 )
 
 // VerifyEmail checks verification token and enables a user
-func VerifyEmail(w http.ResponseWriter, r *http.Request) {
+func VerifyEmailCheck(w http.ResponseWriter, r *http.Request) {
 	log.Println("Verifying email")
 	tokenString := chi.URLParam(r, "token")
 	if tokenString == "" {

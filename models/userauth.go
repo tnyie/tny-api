@@ -6,6 +6,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Get userAuth data
+func (user *UserAuth) Get() error {
+	return db.First(&user, "uid = ?", user.UID).Error
+}
+
 // HashPassword returns a hashed version of given password
 func HashPassword(password []byte) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
@@ -18,7 +23,7 @@ func HashPassword(password []byte) (string, error) {
 // VerifyPassword compares provided plaintext password against stored hash
 func (user *UserAuth) VerifyPassword(password string) error {
 	// fetch user
-	err := db.First(&user).Error
+	err := db.First(&user, user.UID).Error
 	if err != nil {
 		log.Println("Failed to fetch user")
 		return err
@@ -43,9 +48,8 @@ func (user *UserAuth) Verify() error {
 	return db.First(&user).Update("enabled", true).Error
 }
 
-// Get userAuth data
-func (user *UserAuth) Get() error {
-	return db.First(&user, user.UID).Error
+func (user *UserAuth) GetByEmail() error {
+	return db.Where("email = ?", user.Email).First(&user).Error
 }
 
 func (user *UserAuth) ChangePassword(password string) error {
@@ -59,5 +63,4 @@ func (user *UserAuth) ChangePassword(password string) error {
 	err = db.Model(&user).Update("hash", user.Hash).Error
 
 	return err
-
 }
