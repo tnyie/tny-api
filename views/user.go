@@ -107,10 +107,11 @@ func PostUser(w http.ResponseWriter, r *http.Request) {
 
 // Send email Verification
 func VerifyEmail(w http.ResponseWriter, r *http.Request) {
-	email := chi.URLParam(r, "email")
+	email := r.URL.Query().Get("email")
 
 	if email == "" {
 		w.WriteHeader(http.StatusBadRequest)
+		log.Println("No email in request")
 		return
 	}
 
