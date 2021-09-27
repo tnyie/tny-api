@@ -30,6 +30,12 @@ func VerifyEmailCheck(w http.ResponseWriter, r *http.Request) {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
 		email := claims["Email"].(string)
 		user := &models.UserAuth{Email: email}
+		err = user.GetByEmail()
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			log.Println("Couldn't get user")
+			return
+		}
 		err = user.Verify()
 		if err != nil {
 			log.Println("Error enabling user\n", err)

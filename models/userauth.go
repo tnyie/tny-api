@@ -49,7 +49,7 @@ func (user *UserAuth) Create(password string) error {
 
 // Verify sets 'enabled' field to true
 func (user *UserAuth) Verify() error {
-	return db.First(&user, "uid = ?", user.UID).Update("enabled", true).Error
+	return db.Model(&user).Update("enabled", true).Error
 }
 
 func (user *UserAuth) ChangePassword(password string) error {

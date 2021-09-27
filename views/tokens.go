@@ -17,7 +17,6 @@ import (
 func InspectToken(w http.ResponseWriter, r *http.Request) {
 	user, valid, admin := util.CheckLogin(r, "")
 	if valid {
-		w.WriteHeader(http.StatusAccepted)
 		jsonResp := make(map[string]interface{})
 		jsonResp["user_id"] = user.UID
 		if admin {
