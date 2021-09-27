@@ -15,7 +15,8 @@ import (
 
 // InspectToken returns a status 200 if logged in, 403 if not
 func InspectToken(w http.ResponseWriter, r *http.Request) {
-	if user, valid, admin := util.CheckLogin(r, ""); valid {
+	user, valid, admin := util.CheckLogin(r, "")
+	if valid {
 		w.WriteHeader(http.StatusAccepted)
 		jsonResp := make(map[string]interface{})
 		jsonResp["user_id"] = user.UID
@@ -28,9 +29,11 @@ func InspectToken(w http.ResponseWriter, r *http.Request) {
 			log.Println("Couldn't unmarshall response")
 			return
 		}
-		respondJSON(w, encoded, http.StatusOK)
-	}
 
+		respondJSON(w, encoded, http.StatusOK)
+		return
+	}
+	log.Println(user, valid, admin)
 	w.WriteHeader(http.StatusUnauthorized)
 }
 
