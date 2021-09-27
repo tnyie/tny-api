@@ -125,13 +125,18 @@ func VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if userAuth.Enabled {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	err = sendEmailVerification(userAuth)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 }
 
 func sendEmailVerification(userAuth *models.UserAuth) error {
