@@ -11,6 +11,10 @@ func (user *UserAuth) Get() error {
 	return db.First(&user, "uid = ?", user.UID).Error
 }
 
+func (user *UserAuth) GetByEmail() error {
+	return db.Where("email = ?", user.Email).First(&user).Error
+}
+
 // HashPassword returns a hashed version of given password
 func HashPassword(password []byte) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
@@ -23,7 +27,7 @@ func HashPassword(password []byte) (string, error) {
 // VerifyPassword compares provided plaintext password against stored hash
 func (user *UserAuth) VerifyPassword(password string) error {
 	// fetch user
-	err := db.First(&user, user.UID).Error
+	err := db.First(&user, "uid = ?", user.UID).Error
 	if err != nil {
 		log.Println("Failed to fetch user")
 		return err
@@ -45,11 +49,7 @@ func (user *UserAuth) Create(password string) error {
 
 // Verify sets 'enabled' field to true
 func (user *UserAuth) Verify() error {
-	return db.First(&user).Update("enabled", true).Error
-}
-
-func (user *UserAuth) GetByEmail() error {
-	return db.Where("email = ?", user.Email).First(&user).Error
+	return db.First(&user, "uid = ?", user.UID).Update("enabled", true).Error
 }
 
 func (user *UserAuth) ChangePassword(password string) error {

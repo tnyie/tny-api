@@ -25,7 +25,7 @@ func GetLinksByUser(id string) (*[]Link, error) {
 
 // Put updates a link object
 func (link *Link) Put(uid string, field string, value interface{}) error {
-	db.First(link)
+	link.Get()
 	if link.OwnerID != uid {
 		return fmt.Errorf("User doesn't own resource")
 	}
@@ -41,7 +41,7 @@ func (link *Link) Create() error {
 
 // Read a db entry by ID
 func (link *Link) Read() error {
-	return db.First(&link, link.ID).Error
+	return db.First(&link, "id = ?", link.ID).Error
 }
 
 // Search for db entry by slug

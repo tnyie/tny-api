@@ -38,6 +38,10 @@ func InspectToken(w http.ResponseWriter, r *http.Request) {
 func CreateToken(w http.ResponseWriter, r *http.Request) {
 
 	userAuth := getLogin(r)
+	if userAuth == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 
 	expirationTime := time.Now().Add(time.Hour * 5)
 
@@ -105,8 +109,14 @@ func getLogin(r *http.Request) *models.UserAuth {
 		return nil
 	}
 	userAuth := &models.UserAuth{
-		Email:    jsonMap["email"],
-		Username: jsonMap["username"],
+		Email: jsonMap["email"],
+		// Username: jsonMap["username"],
+	}
+
+	err = userAuth.GetByEmail()
+	if err != nil {
+		log.Println("Failed to fetch user auth")
+		return nil
 	}
 
 	err = userAuth.VerifyPassword(jsonMap["password"])
