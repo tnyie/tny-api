@@ -47,7 +47,8 @@ func CreateLink(w http.ResponseWriter, r *http.Request) {
 	if link.OwnerID == "" || link.Slug == "" {
 	tryNew:
 		link.Slug = petname.Generate(2, "-")
-		if err = link.GetBySlug(); err != nil {
+		// if link exists, and no error, try a new petname
+		if err = link.GetBySlug(); err == nil {
 			goto tryNew
 		}
 	}
