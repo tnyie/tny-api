@@ -1,8 +1,19 @@
-# [Tny](https://tny.ie)
+# TnyAPI
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/tnyie/tny-api.svg)](https://pkg.go.dev/github.com/tnyie/tny-api)
 
-A link shortener with some extra kick
+
+A link shortener, backend for [Tny.ie](https://tny.ie) and its associated browser extension. 
+
+## TODO
+- Add unit tests
+- Switch logging library for better logging
+  - Also change how much is logged & remove stale and leaky logs
+
+### Future possible features
+- Support user-owned domains
+- Use subdomains for user-created websites/link trees perhaps?
+  - e.g. thomas.tny.ie may have links for social medias, etc.
 
 # Usage
 
