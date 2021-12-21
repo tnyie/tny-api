@@ -4,17 +4,75 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
 	"path"
 	"time"
 
+	petname "github.com/dustinkirkland/golang-petname"
 	"github.com/go-chi/chi"
 	"github.com/spf13/viper"
 
 	"github.com/tnyie/tny-api/models"
 	"github.com/tnyie/tny-api/util"
 )
+
+const (
+	LEASE_TIME = time.Hour * 24 * 30 * 6
+)
+
+// CreateLink creates a new link
+func CreateLink(w http.ResponseWriter, r *http.Request) {
+	var link models.Link
+	bd, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Println("Couldn't read json body when creating link\n", err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	err = json.Unmarshal(bd, &link)
+	if err != nil {
+		log.Println("malformed create query\n", err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	user, authenticated, admin := util.CheckLogin(r, "")
+	if !authenticated && !admin {
+		link.OwnerID = ""
+	} else {
+		link.OwnerID = user.UID
+	}
+
+	if link.OwnerID == "" || link.Slug == "" {
+	tryNew:
+		link.Slug = petname.Generate(2, "-")
+		if err = link.GetBySlug(); err != nil {
+			goto tryNew
+		}
+	}
+
+	// set to zero, so GORM can set it to current time
+	link.UpdatedAt, link.CreatedAt = 0, 0
+
+	link.Lease = time.Now().Add(LEASE_TIME).Unix()
+
+	err = link.Create()
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusConflict), http.StatusConflict)
+		log.Println(err)
+		return
+	}
+
+	encoded, err := json.Marshal(link)
+	if err != nil {
+		log.Println("Couldn't parse link as json\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	log.Println("New link created by UID: ", link.OwnerID, " with Slug: ", link.Slug)
+	respondJSON(w, encoded, http.StatusCreated)
+}
 
 // RedirectSlug takes the link's slug as a parameter, and redirects request
 func RedirectSlug(w http.ResponseWriter, r *http.Request) {
@@ -302,59 +360,6 @@ func PutLinkAttribute(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	respondJSON(w, encoded, http.StatusOK)
-}
-
-// CreateLink creates a new link
-func CreateLink(w http.ResponseWriter, r *http.Request) {
-	var link models.Link
-	bd, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Println("Couldn't read json body when creating link\n", err)
-		return
-	}
-
-	err = json.Unmarshal(bd, &link)
-	if err != nil {
-		log.Println("malformed create query\n", err)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
-	log.Println("UNLOCK_TIME: ", link.UnlockTime)
-
-	user, authenticated, admin := util.CheckLogin(r, "")
-	if !authenticated && !admin {
-		link.OwnerID = ""
-	} else {
-		link.OwnerID = user.UID
-	}
-
-	if link.OwnerID == "" || link.Slug == "" {
-		var str []byte
-		chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-"
-		for i := 0; i < 6; i++ {
-			str = append(str, chars[rand.Intn(62)])
-		}
-		link.Slug = string(str)
-	}
-
-	// if zero-value will be set by gorm to current time
-	link.UpdatedAt, link.CreatedAt = 0, 0
-	link.Lease = time.Now().Add(time.Hour * 24 * 30).Unix()
-	err = link.Create()
-	log.Println("Unlock time ", link.UnlockTime)
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusConflict), http.StatusConflict)
-		log.Println(err)
-		return
-	}
-	encoded, err := json.Marshal(link)
-	if err != nil {
-		log.Println("Couldn't parse link as json\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	log.Println(string(encoded))
-	respondJSON(w, encoded, http.StatusCreated)
 }
 
 // DeleteLink deletes a given link

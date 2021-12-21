@@ -190,7 +190,7 @@ func PasswordResetRequest(w http.ResponseWriter, r *http.Request) {
 
 	userAuth := &models.UserAuth{Email: data["email"]}
 
-	if err := userAuth.Get(); err != nil {
+	if err := userAuth.GetByEmail(); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 	}
 
