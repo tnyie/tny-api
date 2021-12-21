@@ -266,7 +266,7 @@ func PasswordReset(w http.ResponseWriter, r *http.Request) {
 		email := claims["Email"].(string)
 
 		userAuth := &models.UserAuth{Email: email}
-		err = userAuth.Get()
+		err = userAuth.GetByEmail()
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			log.Println("User not found\n", err)
