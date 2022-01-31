@@ -20,7 +20,7 @@ func main() {
 	router.Route(r)
 
 	// wait for database
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 10)
 	models.InitModels()
 
 	handler := cors.AllowAll().Handler(r)
